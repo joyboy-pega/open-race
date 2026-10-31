@@ -406,7 +406,7 @@ export function MultiplayerLobby({ onStartRace, onBack }: MultiplayerLobbyProps)
                     onChange={(e) => room.updateSettings({ totalLaps: Number(e.target.value) })}
                     className="bg-black/60 border border-white/15 px-2.5 py-1.5 text-xs focus:outline-none font-mono disabled:opacity-75"
                   >
-                    {[3, 5, 10, 20].map((l) => (
+                    {[1, 2, 3, 5, 10, 20].map((l) => (
                       <option key={l} value={l} className="bg-neutral-900">
                         {l} LAPS
                       </option>

@@ -39,7 +39,7 @@ export function GameOver({ results, onRestart, onExitToMenu }: GameOverProps) {
   const weather = useGameStore((s) => s.settings.weather);
   const trackId = useGameStore((s) => s.settings.trackId);
   const records = useGameStore((s) => s.records);
-  const isRace = results.mode === 'race';
+  const isRace = results.mode === 'race' || results.mode === 'multiplayer';
   const isQuali = results.mode === 'qualifying';
   const isMultiCar = isRace || isQuali;
   const pos = results.playerPosition;

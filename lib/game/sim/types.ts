@@ -1,4 +1,4 @@
-import type { AIConfig, Livery, TyreCompound } from '../constants';
+import type { AIConfig, Livery, TyreCompound, VehicleModelType } from '../constants';
 import type { ControlState } from '../controls';
 import type { CarPhysicsState } from '../physics';
 
@@ -94,6 +94,7 @@ export interface CarStats {
 export interface WorldCar {
   id: number;
   isPlayer: boolean;
+  carModel?: VehicleModelType;
   driver: DriverInfo;
   skill: AIConfig | null;
   phys: CarPhysicsState;

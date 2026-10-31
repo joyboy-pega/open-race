@@ -47,10 +47,12 @@ export class MultiplayerRoom {
   players: PlayerInfo[] = [];
   interpolator = new SnapshotInterpolator();
   transport: MultiplayerTransport | null = null;
+  lastSnapshot: ServerSnapshotPacket | null = null;
 
   private listeners: RoomEventListener[] = [];
   private peerHeartbeats = new Map<string, number>();
   private clientInputs = new Map<string, ControlState>();
+  private clientPoses = new Map<string, { x: number; y: number; a: number; vf: number; vl: number; steer: number }>();
   private countdownTimer = 0;
   private seq = 0;
   private joinRetryTimer: number | null = null;
@@ -201,7 +203,11 @@ export class MultiplayerRoom {
     return true;
   }
 
-  sendInput(controls: ControlState, simTimestamp: number) {
+  sendInput(
+    controls: ControlState,
+    simTimestamp: number,
+    pose?: { x: number; y: number; a: number; vf: number; vl: number; steer: number }
+  ) {
     if (this.role === 'client') {
       this.send({
         type: 'input',
@@ -209,6 +215,7 @@ export class MultiplayerRoom {
         seq: ++this.seq,
         timestamp: simTimestamp,
         controls,
+        pose,
       });
     }
   }
@@ -218,7 +225,7 @@ export class MultiplayerRoom {
     if (this.role !== 'host') return;
     const snapshots: CarSnapshot[] = world.cars.map((c) => ({
       carId: c.id,
-      timestamp: world.raceTime,
+      timestamp: world.sessionTime,
       x: c.phys.x,
       y: c.phys.y,
       a: c.phys.a,
@@ -240,7 +247,11 @@ export class MultiplayerRoom {
 
     const packet: ServerSnapshotPacket = {
       type: 'snapshot',
-      simTime: world.raceTime,
+      simTime: world.sessionTime,
+      raceTime: world.raceTime,
+      phase: world.phase,
+      phaseTime: world.phaseTime,
+      lightsLit: world.lightsLit,
       cars: snapshots,
     };
     this.send(packet);
@@ -264,6 +275,16 @@ export class MultiplayerRoom {
         car.ai = null;
         const ctrl = this.clientInputs.get(player.id) ?? NEUTRAL_CONTROLS;
         car.ctrl = { ...ctrl };
+
+        const pose = this.clientPoses.get(player.id);
+        if (pose && (world.phase === 'racing' || world.phase === 'finished')) {
+          car.phys.x = pose.x;
+          car.phys.y = pose.y;
+          car.phys.a = pose.a;
+          car.phys.vf = pose.vf;
+          car.phys.vl = pose.vl;
+          car.phys.steer = pose.steer;
+        }
       }
     }
   }
@@ -339,6 +360,7 @@ export class MultiplayerRoom {
       }
       case 'snapshot': {
         if (this.role === 'client') {
+          this.lastSnapshot = packet;
           for (const s of packet.cars) {
             this.interpolator.push(s);
           }
@@ -349,6 +371,9 @@ export class MultiplayerRoom {
         if (this.role === 'host') {
           this.peerHeartbeats.set(packet.peerId, Date.now());
           this.clientInputs.set(packet.peerId, packet.controls);
+          if (packet.pose) {
+            this.clientPoses.set(packet.peerId, packet.pose);
+          }
         }
         break;
       }
@@ -423,6 +448,8 @@ export class MultiplayerRoom {
     this.state = 'idle';
     this.players = [];
     this.interpolator.reset();
+    this.lastSnapshot = null;
+    this.clientPoses.clear();
   }
 }
 

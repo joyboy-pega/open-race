@@ -50,11 +50,23 @@ export interface ClientInputPacket {
   seq: number;
   timestamp: number;
   controls: ControlState;
+  pose?: {
+    x: number;
+    y: number;
+    a: number;
+    vf: number;
+    vl: number;
+    steer: number;
+  };
 }
 
 export interface ServerSnapshotPacket {
   type: 'snapshot';
   simTime: number;
+  raceTime?: number;
+  phase?: 'grid' | 'lights' | 'racing' | 'finished';
+  phaseTime?: number;
+  lightsLit?: number;
   cars: CarSnapshot[];
 }
 

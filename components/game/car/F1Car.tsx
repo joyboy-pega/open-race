@@ -30,13 +30,13 @@ export interface F1CarProps {
  * uniform CAR_SCALE. Supports modern 2026 F1, Tesla Roadster, and Formula Student Pegasus #53.
  */
 export function F1Car({ car, interpolate = false }: F1CarProps) {
-  const carModel = useGameStore((s) => s.settings.carModel);
-  const isPegasus =
-    (car.isPlayer && carModel === 'pegasus') || car.driver.team === 'Pegasus';
+  const storeModel = useGameStore((s) => s.settings.carModel);
+  const activeModel = car.carModel || (car.isPlayer ? storeModel : undefined) || (car.driver.team === 'Pegasus' ? 'pegasus' : 'f1');
+  const isPegasus = activeModel === 'pegasus' || car.driver.team === 'Pegasus';
   if (isPegasus) {
     return <PegasusCar car={car} interpolate={interpolate} />;
   }
-  const isRoadster = car.isPlayer && carModel === 'roadster';
+  const isRoadster = activeModel === 'roadster';
   return (
     <CarRig
       key={isRoadster ? 'roadster' : 'f1'}

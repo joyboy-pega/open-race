@@ -223,7 +223,35 @@ export function GameLoop() {
           lastSnapshotTime.current = performance.now();
         }
       } else if (multiplayerRoom.role === 'client') {
-        multiplayerRoom.sendInput(input, world.raceTime);
+        const pl = world.player;
+        multiplayerRoom.sendInput(
+          input,
+          world.sessionTime,
+          pl
+            ? {
+                x: pl.phys.x,
+                y: pl.phys.y,
+                a: pl.phys.a,
+                vf: pl.phys.vf,
+                vl: pl.phys.vl,
+                steer: pl.phys.steer,
+              }
+            : undefined
+        );
+
+        // Synchronize authoritative race phase and lights from host in multiplayer
+        const snap = multiplayerRoom.lastSnapshot;
+        if (snap) {
+          if (snap.phase === 'racing' && world.phase !== 'racing' && world.phase !== 'finished') {
+            world.phase = 'racing';
+            world.events.emit({ type: 'lightsOut' });
+          } else if (world.phase !== 'racing' && world.phase !== 'finished' && snap.phase) {
+            world.phase = snap.phase;
+          }
+          if (typeof snap.lightsLit === 'number') world.lightsLit = snap.lightsLit;
+          if (typeof snap.phaseTime === 'number') world.phaseTime = snap.phaseTime;
+          if (typeof snap.raceTime === 'number') world.raceTime = snap.raceTime;
+        }
       }
     }
 
@@ -238,11 +266,28 @@ export function GameLoop() {
       for (let i = 0; i < world.cars.length; i++) {
         const car = world.cars[i];
         if (!car.isPlayer) {
-          const hasSample = multiplayerRoom.interpolator.sample(car.id, world.raceTime, mpPoseScratch);
+          const hasSample = multiplayerRoom.interpolator.sample(car.id, world.sessionTime, mpPoseScratch);
           if (hasSample) {
             car.prevX = car.phys.x = mpPoseScratch.x;
             car.prevY = car.phys.y = mpPoseScratch.y;
             car.prevA = car.phys.a = mpPoseScratch.a;
+          }
+        } else {
+          // Soft-reconcile local player car with host if major divergence occurs (e.g. wall push)
+          const snap = multiplayerRoom.lastSnapshot;
+          if (snap) {
+            const hostSnap = snap.cars.find((c) => c.carId === car.id);
+            if (hostSnap) {
+              const dx = car.phys.x - hostSnap.x;
+              const dy = car.phys.y - hostSnap.y;
+              if (dx * dx + dy * dy > 25) {
+                car.prevX = car.phys.x = hostSnap.x;
+                car.prevY = car.phys.y = hostSnap.y;
+                car.prevA = car.phys.a = hostSnap.a;
+                car.phys.vf = hostSnap.vf;
+                car.phys.vl = hostSnap.vl;
+              }
+            }
           }
         }
       }

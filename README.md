@@ -1,6 +1,8 @@
 # Open Race (Buddh GP)
 
-**Open Race** is a high-performance browser-based 3D racing simulation game set on the Buddh International Circuit, created by **Arigatoo Club**. Race a full grid of AI rivals around the track, manage tyres, pit stops, DRS and ERS, and watch the race back with TV-style cameras. It runs entirely in the browser on WebGL2, with no install step beyond the dev server.
+🎮 **Play live:** [open-race.pages.dev](https://open-race.pages.dev)
+
+**Open Race** is a high-performance browser-based 3D racing simulation game set on the Buddh International Circuit, created by **Arigatoo Club**. Race a full grid of AI rivals or challenge friends over real-time WebRTC multiplayer, manage tyres, pit stops, DRS and ERS, and watch the race back with TV-style cameras. It runs entirely in the browser on WebGL2, with no install step beyond the dev server.
 
 ## Features
 
@@ -28,6 +30,7 @@
 | Look back | B (hold) | Right stick down / L3 |
 | Reset car | R | D-pad up |
 | Telemetry panel | T | View / Back |
+| Rear view mirror toggle | V | — |
 | Pause menu | Esc or M | Start |
 
 ## Getting started

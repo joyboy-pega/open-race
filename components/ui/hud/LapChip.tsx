@@ -11,7 +11,7 @@ import { formatClock } from '../format';
 /** Top-right lap chip: live lap clock, delta to best, sector bars, last/best, race position. */
 export function LapChip() {
   const w = useWriter();
-  const isRace = useGameStore((s) => s.settings.mode === 'race');
+  const isRace = useGameStore((s) => s.settings.mode === 'race' || s.settings.mode === 'multiplayer');
   const position = useGameStore((s) => s.hud.position);
   const carCount = useGameStore((s) => s.hud.carCount);
   const sectors = useGameStore((s) => s.hud.sectors);

@@ -9,6 +9,7 @@ import type {
   Livery,
 } from './constants';
 import type { CarSetup } from './sim/rules';
+import type { PlayerInfo } from './multiplayer/protocol';
 
 export type { WeatherType, CameraViewMode, VehicleModelType, TyreCompound, GameMode, Difficulty, TimeOfDay, Livery, CarSetup };
 
@@ -212,12 +213,15 @@ export interface GameSettings {
   quality: QualityChoice;
   showTelemetry: boolean;
   showMinimap: boolean;
+  showRearViewMirror: boolean;
   showGhost: boolean;
   qualifyingFormat?: 'oneshot' | 'short';
   qualifyingGrid?: string[];
   dynamicWeather?: boolean;
   setup?: CarSetup;
   regulations?: '2022' | '2026';
+  multiplayerPlayers?: PlayerInfo[];
+  multiplayerLocalPeerId?: string;
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
@@ -255,6 +259,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   quality: 'AUTO',
   showTelemetry: false,
   showMinimap: true,
+  showRearViewMirror: true,
   showGhost: true,
 };
 

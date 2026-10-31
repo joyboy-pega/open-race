@@ -387,4 +387,96 @@ describe('R13: Multiplayer Room State Machine & AI Fallback', () => {
     hostRoom.close();
     clientRoom.close();
   });
+
+  it('creates exactly N cars for N joined players with 0 AI bots in multiplayer mode', () => {
+    const world = new GameWorld();
+    world.setup({
+      ...DEFAULT_SETTINGS,
+      mode: 'multiplayer',
+      aiCount: 0,
+      multiplayerLocalPeerId: 'peer_host',
+      multiplayerPlayers: [
+        {
+          id: 'peer_host',
+          carId: 0,
+          driverName: 'Host Driver',
+          driverCode: 'HST',
+          team: 'Titan Corsa',
+          livery: { body: '#DC0000', accent: '#FFFFFF', rim: '#DC0000', number: 16 },
+          carModel: 'f1',
+          ready: true,
+          isHost: true,
+          latencyMs: 0,
+        },
+        {
+          id: 'peer_guest',
+          carId: 1,
+          driverName: 'Guest Racer',
+          driverCode: 'GST',
+          team: 'Velocity GP',
+          livery: { body: '#FF8700', accent: '#0072BB', rim: '#1E1E1E', number: 4 },
+          carModel: 'roadster',
+          ready: true,
+          isHost: false,
+          latencyMs: 20,
+        },
+      ],
+    });
+
+    // Exactly 2 cars, 0 bots
+    expect(world.cars).toHaveLength(2);
+    expect(world.cars[0].isPlayer).toBe(true);
+    expect(world.cars[0].driver.code).toBe('HST');
+    expect(world.cars[0].carModel).toBe('f1');
+    expect(world.cars[0].ai).toBeNull();
+
+    expect(world.cars[1].isPlayer).toBe(false);
+    expect(world.cars[1].driver.code).toBe('GST');
+    expect(world.cars[1].carModel).toBe('roadster');
+    expect(world.cars[1].ai).toBeNull();
+  });
+
+  it('assigns client player slot correctly to the guest on client peer', () => {
+    const world = new GameWorld();
+    world.setup({
+      ...DEFAULT_SETTINGS,
+      mode: 'multiplayer',
+      aiCount: 0,
+      multiplayerLocalPeerId: 'peer_guest',
+      multiplayerPlayers: [
+        {
+          id: 'peer_host',
+          carId: 0,
+          driverName: 'Host Driver',
+          driverCode: 'HST',
+          team: 'Titan Corsa',
+          livery: { body: '#DC0000', accent: '#FFFFFF', rim: '#DC0000', number: 16 },
+          carModel: 'f1',
+          ready: true,
+          isHost: true,
+          latencyMs: 0,
+        },
+        {
+          id: 'peer_guest',
+          carId: 1,
+          driverName: 'Guest Racer',
+          driverCode: 'GST',
+          team: 'Velocity GP',
+          livery: { body: '#FF8700', accent: '#0072BB', rim: '#1E1E1E', number: 4 },
+          carModel: 'roadster',
+          ready: true,
+          isHost: false,
+          latencyMs: 20,
+        },
+      ],
+    });
+
+    expect(world.cars).toHaveLength(2);
+    // On client machine, car 0 (host) is NOT player, car 1 (guest) IS player!
+    expect(world.cars[0].isPlayer).toBe(false);
+    expect(world.cars[1].isPlayer).toBe(true);
+    expect(world.player.id).toBe(1);
+    expect(world.player.driver.code).toBe('GST');
+    expect(world.isMultiplayerClient).toBe(true);
+  });
 });

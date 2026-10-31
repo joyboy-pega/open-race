@@ -8,10 +8,21 @@ import { InstancedAICars } from './car/InstancedAICars';
 /** Renders every car in the world with instancing for AI grid (PLAN-v3 §7 G6). */
 export function Cars() {
   const sessionId = useGameStore((s) => s.sessionId);
+  const isMultiplayer = world.isMultiplayer;
   const playerCar = world.player;
   const nonPlayerCars = world.cars.filter((c) => !c.isPlayer);
   const aiF1Cars = nonPlayerCars.filter((c) => c.driver.team !== 'Pegasus');
   const aiPegasusCars = nonPlayerCars.filter((c) => c.driver.team === 'Pegasus');
+
+  if (isMultiplayer) {
+    return (
+      <group name="cars" key={sessionId}>
+        {world.cars.map((car) => (
+          <F1Car key={`${world.raceId}-${car.id}`} car={car} interpolate />
+        ))}
+      </group>
+    );
+  }
 
   return (
     <group name="cars" key={sessionId}>

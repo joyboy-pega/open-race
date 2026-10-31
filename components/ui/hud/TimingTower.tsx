@@ -48,7 +48,7 @@ export function TimingTower() {
 
   const rows = useMemo(() => visibleRows(order), [order]);
 
-  if (mode !== 'race') {
+  if (mode !== 'race' && mode !== 'multiplayer') {
     return (
       <div className="h-tower h-tower-solo" aria-label="Session">
         <div className="h-tw-head">

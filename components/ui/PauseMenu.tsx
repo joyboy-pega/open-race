@@ -204,7 +204,7 @@ export function PauseMenu({ onResume, onRestart, onExitToMenu }: PauseMenuProps)
   const trackId = useGameStore((s) => s.settings.trackId);
   const trackName = getTrackCatalogEntry(trackId).name;
   const hud = useGameStore((s) => s.hud);
-  const isRace = mode === 'race';
+  const isRace = mode === 'race' || mode === 'multiplayer';
 
   useEffect(() => {
     resumeRef.current?.focus();

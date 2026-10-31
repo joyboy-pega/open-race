@@ -19,6 +19,7 @@ import { AudioBridge } from './AudioBridge';
 import { PostFX } from './fx/PostFX';
 import { Ghost } from './Ghost';
 import { ReplayDirector } from './replay/ReplayDirector';
+import { RearViewMirror } from './RearViewMirror';
 
 /** Pre-warms the GPU shader cache for all scene materials so the cutscene doesn't hitch. */
 function PrewarmScene() {
@@ -74,6 +75,7 @@ export function GameCanvas() {
           <Ghost />
           <Effects />
           <Camera />
+          <RearViewMirror />
           <ReplayDirector />
           <PostFX />
           <PrewarmScene />

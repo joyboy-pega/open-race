@@ -1,4 +1,4 @@
-import { DRIVER_ROSTER, MAX_AI_CARS, HW, type DriverProfile, type TyreCompound } from '../constants';
+import { DRIVER_ROSTER, MAX_AI_CARS, HW, type DriverProfile, type TyreCompound, type VehicleModelType } from '../constants';
 import { DEFAULT_TRACK_ID, isTrackLoaded, setActiveTrack, track } from '../track';
 import { NEUTRAL_CONTROLS, type ControlState } from '../controls';
 import {
@@ -58,12 +58,13 @@ const POSITION_DEBOUNCE = 0.5;
 /** Scratch for makeCar (setup-time only). */
 const scratchArc: ArcPos = { s: 0, lateral: 0 };
 
-export function makeCar(id: number, isPlayer: boolean, idx: number, lateral: number, compound: TyreCompound): WorldCar {
+export function makeCar(id: number, isPlayer: boolean, idx: number, lateral: number, compound: TyreCompound, carModel?: VehicleModelType): WorldCar {
   const phys = createInitialCarState(idx, lateral);
   const { s } = arcPosition(phys, scratchArc);
   return {
     id,
     isPlayer,
+    carModel,
     driver: { name: '', code: '', team: '', livery: { body: '#fff', accent: '#000', rim: '#ccc', number: 0 } },
     skill: null,
     phys,
@@ -112,6 +113,7 @@ export class GameWorld {
   phase: RacePhase = 'grid';
   phaseTime = 0;
   raceTime = 0;
+  sessionTime = 0;
   lightsLit = 0;
   paused = false;
   /** Increments on every setup() so renderers can rebuild per-car objects. */
@@ -166,6 +168,14 @@ export class GameWorld {
     return this.settings.mode === 'multiplayer';
   }
 
+  get isMultiplayerClient() {
+    if (!this.isMultiplayer) return false;
+    const players = this.settings.multiplayerPlayers;
+    if (!players || players.length === 0) return false;
+    const host = players.find((p) => p.isHost) || players[0];
+    return host.id !== this.settings.multiplayerLocalPeerId;
+  }
+
   updateSettings(patch: Partial<GameSettings>) {
     this.settings = { ...this.settings, ...patch };
   }
@@ -182,6 +192,7 @@ export class GameWorld {
     this.overall = createOverallBests();
     this.phaseTime = 0;
     this.raceTime = 0;
+    this.sessionTime = 0;
     this.lightsLit = 0;
     this.lightsHold = 0.6 + this.rand() * 1.6;
     this.chequered = false;
@@ -202,13 +213,26 @@ export class GameWorld {
     const race = this.isRace;
     const qualifying = this.isQualifying;
     const isMultiCar = race || qualifying || this.isMultiplayer;
-    const aiCount = isMultiCar ? Math.max(0, Math.min(MAX_AI_CARS, settings.aiCount)) : 0;
-    const carCount = aiCount + 1;
+    const isMp = this.isMultiplayer;
+    const mpPlayers =
+      isMp && settings.multiplayerPlayers && settings.multiplayerPlayers.length > 0
+        ? settings.multiplayerPlayers
+        : null;
+
+    const aiCount = mpPlayers
+      ? 0
+      : isMultiCar
+      ? Math.max(0, Math.min(MAX_AI_CARS, settings.aiCount))
+      : 0;
+    const carCount = mpPlayers ? mpPlayers.length : aiCount + 1;
 
     let playerSlot = 0;
     let grid: DriverProfile[] = [];
 
-    if (race && settings.qualifyingGrid && settings.qualifyingGrid.length > 0) {
+    if (mpPlayers) {
+      const myIdx = mpPlayers.findIndex((p) => p.id === settings.multiplayerLocalPeerId);
+      playerSlot = myIdx >= 0 ? myIdx : 0;
+    } else if (race && settings.qualifyingGrid && settings.qualifyingGrid.length > 0) {
       // Set grid from qualifying results (PLAN-v3 §8 R2)
       const qGrid = settings.qualifyingGrid;
       const playerPos = qGrid.indexOf('player');
@@ -263,8 +287,19 @@ export class GameWorld {
         car.phys.gear = 6;
         car.phys.rpm = 10500;
       }
-      if (isPlayer) {
+      if (mpPlayers) {
+        const p = mpPlayers[slot];
+        car.driver = {
+          name: p.driverName,
+          code: p.driverCode,
+          team: p.team,
+          livery: p.livery,
+        };
+        car.carModel = p.carModel;
+        car.ai = null; // Pure human grid - NO BOTS in multiplayer
+      } else if (isPlayer) {
         car.driver = { name: settings.driverName, code: settings.driverCode, team: 'Player', livery: settings.livery };
+        car.carModel = settings.carModel;
       } else {
         const d = grid[aiIdx++];
         car.driver = { name: d.name, code: d.code, team: d.team, livery: d.livery };
@@ -338,6 +373,7 @@ export class GameWorld {
 
   private fixedStep(dt: number) {
     this.phaseTime += dt;
+    this.sessionTime += dt;
 
     if (this.phase === 'grid' || this.phase === 'lights') {
       this.updateStart(dt);
@@ -511,27 +547,29 @@ export class GameWorld {
       p.gear = 'N';
     }
     if (this.phase === 'grid') {
-      if (this.phaseTime >= GRID_HOLD) {
+      if (!this.isMultiplayerClient && this.phaseTime >= GRID_HOLD) {
         this.phase = 'lights';
         this.phaseTime = 0;
       }
       return;
     }
-    const lit = Math.min(5, Math.floor(this.phaseTime / LIGHT_INTERVAL) + 1);
-    if (lit !== this.lightsLit && this.phaseTime < 5 * LIGHT_INTERVAL) {
-      this.lightsLit = lit;
-      this.events.emit({ type: 'lightsOn', count: lit });
-    }
-    if (this.phaseTime >= 5 * LIGHT_INTERVAL + this.lightsHold) {
-      this.lightsLit = 0;
-      this.phase = 'racing';
-      this.phaseTime = 0;
-      this.raceTime = 0;
-      for (const car of this.cars) {
-        car.timing.lapStartTime = 0;
-        car.timing.sectorStartTime = null;
+    if (!this.isMultiplayerClient) {
+      const lit = Math.min(5, Math.floor(this.phaseTime / LIGHT_INTERVAL) + 1);
+      if (lit !== this.lightsLit && this.phaseTime < 5 * LIGHT_INTERVAL) {
+        this.lightsLit = lit;
+        this.events.emit({ type: 'lightsOn', count: lit });
       }
-      this.events.emit({ type: 'lightsOut' });
+      if (this.phaseTime >= 5 * LIGHT_INTERVAL + this.lightsHold) {
+        this.lightsLit = 0;
+        this.phase = 'racing';
+        this.phaseTime = 0;
+        this.raceTime = 0;
+        for (const car of this.cars) {
+          car.timing.lapStartTime = 0;
+          car.timing.sectorStartTime = null;
+        }
+        this.events.emit({ type: 'lightsOut' });
+      }
     }
   }
 

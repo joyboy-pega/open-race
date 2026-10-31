@@ -437,11 +437,13 @@ export function MainMenu() {
               totalLaps: roomSettings.totalLaps,
               weather: roomSettings.weather,
               timeOfDay: roomSettings.timeOfDay ?? 'day',
-              aiCount: Math.max(0, 20 - players.length),
+              aiCount: 0,
               carModel: me?.carModel ?? 'f1',
               livery: me?.livery ?? s.livery,
               driverName: me?.driverName ?? s.driverName,
               driverCode: me?.driverCode ?? s.driverCode,
+              multiplayerPlayers: players,
+              multiplayerLocalPeerId: room.localPeerId,
             });
             router.push('/game');
           }}

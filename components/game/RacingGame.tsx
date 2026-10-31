@@ -9,6 +9,7 @@ import { useGameStore } from '@/lib/game/store';
 import { world } from '@/lib/game/sim/world';
 import { ghostStore, loadGhost, migrateLegacyGhostKeys } from '@/lib/game/replay/ghost';
 import { ensureTrack } from '@/lib/game/track';
+import { multiplayerRoom } from '@/lib/game/multiplayer/room';
 import { ReplayControls } from '@/components/ui/ReplayControls';
 import { GameCanvas } from './GameCanvas';
 import { HUD } from '@/components/ui/HUD';
@@ -20,6 +21,14 @@ import { GameOver } from '@/components/ui/GameOver';
 
 /** Build the world from current settings, then bump the session so the scene remounts against it. */
 export async function startSession() {
+  const storeSettings = useGameStore.getState().settings;
+  if (storeSettings.mode === 'multiplayer' && multiplayerRoom.players.length > 0) {
+    useGameStore.getState().setSettings({
+      multiplayerPlayers: [...multiplayerRoom.players],
+      multiplayerLocalPeerId: multiplayerRoom.localPeerId,
+      aiCount: 0,
+    });
+  }
   const settings = useGameStore.getState().settings;
   // Load (and build) the selected circuit before the world is set up against it.
   try {
@@ -103,8 +112,21 @@ export function RacingGame() {
     };
   }, []);
 
-  const restart = () => void startSession();
-  const exit = () => router.push('/');
+  const restart = () => {
+    if (world.isMultiplayer) {
+      multiplayerRoom.close();
+      useGameStore.getState().setSettings({ mode: 'multiplayer' });
+      router.push('/');
+    } else {
+      void startSession();
+    }
+  };
+  const exit = () => {
+    if (world.isMultiplayer) {
+      multiplayerRoom.close();
+    }
+    router.push('/');
+  };
 
   if (!ready) return null;
 

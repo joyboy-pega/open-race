@@ -20,12 +20,36 @@ export function HUD() {
   const setPaused = useGameStore((s) => s.setPaused);
   const telemetryOpen = useGameStore((s) => s.telemetryOpen || s.settings.showTelemetry);
   const toggleTelemetry = useGameStore((s) => s.toggleTelemetry);
+  const showMirror = useGameStore((s) => s.settings.showRearViewMirror ?? true);
+  const toggleMirror = () => {
+    const next = !showMirror;
+    useGameStore.getState().setSettings({ showRearViewMirror: next });
+    useGameStore.getState().pushToast({
+      id: 'toast-mirror',
+      type: 'info',
+      title: 'REAR MIRROR',
+      subtitle: next ? 'ON' : 'OFF',
+      duration: 1.5,
+    });
+  };
 
   return (
     <div className="h-root">
       <TimingTower />
       <div className="h-topright">
         <LapChip />
+        <button
+          type="button"
+          className={`h-pause h-tele-btn${showMirror ? ' active' : ''}`}
+          onClick={toggleMirror}
+          aria-label="Toggle Rear Mirror (V)"
+          title="Toggle Rear Mirror (V)"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="6" width="18" height="10" rx="3" />
+            <path d="M7 16l-2 4m12-4l2 4" />
+          </svg>
+        </button>
         <button
           type="button"
           className={`h-pause h-tele-btn${telemetryOpen ? ' active' : ''}`}

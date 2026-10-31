@@ -611,7 +611,7 @@
 /* ---------------------------------------------------------------- toasts */
 .h-toasts {
   position: absolute;
-  top: 14px;
+  top: 184px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
