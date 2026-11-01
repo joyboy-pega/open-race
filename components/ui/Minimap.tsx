@@ -5,9 +5,9 @@ import { track } from '@/lib/game/track';
 import { useTicker } from '@/lib/game/useTicker';
 import { world } from '@/lib/game/sim/world';
 
-const W = 144;
-const H = 144;
-const PAD = 14;
+const W = 124;
+const H = 124;
+const PAD = 12;
 const DPR = 2;
 
 function bounds() {
@@ -47,14 +47,14 @@ function drawStatic(): HTMLCanvasElement {
   path(0, N);
   ctx.closePath();
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-  ctx.lineWidth = 7;
+  ctx.lineWidth = 6;
   ctx.stroke();
 
   // Core bright white track ribbon
   path(0, N);
   ctx.closePath();
   ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 3.6;
   ctx.stroke();
 
   // Start / finish tick perpendicular to the track
@@ -64,17 +64,17 @@ function drawStatic(): HTMLCanvasElement {
   const nx = -dy / len;
   const ny = dx / len;
   ctx.beginPath();
-  ctx.moveTo(px(T.px[0]) - nx * 6, py(T.py[0]) - ny * 6);
-  ctx.lineTo(px(T.px[0]) + nx * 6, py(T.py[0]) + ny * 6);
+  ctx.moveTo(px(T.px[0]) - nx * 5, py(T.py[0]) - ny * 5);
+  ctx.lineTo(px(T.px[0]) + nx * 5, py(T.py[0]) + ny * 5);
   ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 2.4;
   ctx.stroke();
 
   return cv;
 }
 
 /**
- * Wreckfest-style Bottom-Left Circular Minimap Radar (matching reference image):
+ * Top-Left Circular Minimap Radar (placed at the top-left, nothing at the bottom):
  * - Circular dark translucent radar disk with white border ring
  * - Pure white circuit ribbon
  * - Yellow heading chevron for player car
@@ -106,7 +106,7 @@ export function Minimap() {
       const cx = px(car.phys.x);
       const cy = py(car.phys.y);
       ctx.beginPath();
-      ctx.arc(cx, cy, 3.0, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 2.8, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
       ctx.lineWidth = 1.2;
@@ -126,11 +126,11 @@ export function Minimap() {
 
     // Drop shadow on chevron
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    ctx.shadowBlur = 5;
+    ctx.shadowBlur = 4;
     ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 1;
 
-    const size = 7.5;
+    const size = 6.8;
     ctx.beginPath();
     ctx.moveTo(size * 1.35, 0);
     ctx.lineTo(-size * 0.9, -size * 0.75);
@@ -144,7 +144,7 @@ export function Minimap() {
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.4;
     ctx.strokeStyle = '#000000';
     ctx.stroke();
 
@@ -152,22 +152,22 @@ export function Minimap() {
   });
 
   return (
-    <div className="absolute bottom-6 left-6 z-20 flex flex-col items-center gap-1.5 select-none pointer-events-none font-sans">
+    <div className="absolute top-4 left-5 z-20 flex flex-col items-center gap-1 select-none pointer-events-none font-sans">
       {/* Circular Radar Disk with White Border */}
-      <div className="w-36 h-36 rounded-full bg-black/45 border-2 border-white/20 overflow-hidden shadow-2xl flex items-center justify-center p-1">
+      <div className="w-[124px] h-[124px] rounded-full bg-black/50 border-2 border-white/20 overflow-hidden shadow-2xl flex items-center justify-center p-0.5">
         <canvas ref={ref} width={W * DPR} height={H * DPR} style={{ width: W, height: H }} />
       </div>
 
       {/* Key Hints Bar */}
-      <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-white/60">
+      <div className="flex items-center gap-2 text-[9px] font-mono font-bold text-white/60">
         <span className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[9px]">
+          <kbd className="px-1 py-0.2 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[8px]">
             C
           </kbd>
           CAM
         </span>
         <span className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[9px]">
+          <kbd className="px-1 py-0.2 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[8px]">
             V
           </kbd>
           MIRROR

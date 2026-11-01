@@ -15,7 +15,7 @@ function formatWreckfestTime(sec: number): string {
 }
 
 /**
- * Wreckfest-style Top-Right Lap & 3-Row Digital Timing Table (matching reference image):
+ * Wreckfest-style Top-Right Lap & 3-Row Digital Timing Table (positioned beside speedometer at top-right):
  * LAP
  * 1/4
  * ┌────────────────────────┐
@@ -44,18 +44,18 @@ export function WreckfestLapTimer() {
   });
 
   return (
-    <div className="absolute top-4 right-6 z-20 flex flex-col items-end select-none pointer-events-none font-sans">
+    <div className="absolute top-4 right-[148px] md:right-[154px] z-20 flex flex-col items-end select-none pointer-events-none font-sans">
       {/* Top Header Row with Pause Button */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <div className="flex flex-col items-end leading-none">
-          <span className="text-[11px] font-mono font-bold tracking-widest text-white/75 uppercase drop-shadow">
+          <span className="text-[10px] font-mono font-bold tracking-widest text-white/75 uppercase drop-shadow">
             LAP
           </span>
           <div className="flex items-baseline leading-none mt-0.5">
-            <span className="font-display font-black text-5xl md:text-6xl italic text-white tracking-tighter drop-shadow-lg">
+            <span className="font-display font-black text-4xl md:text-5xl italic text-white tracking-tighter drop-shadow-lg">
               {lap}
             </span>
-            <span className="font-display font-black text-2xl md:text-3xl italic text-white/70 ml-0.5 tracking-tight drop-shadow-md">
+            <span className="font-display font-black text-xl md:text-2xl italic text-white/70 ml-0.5 tracking-tight drop-shadow-md">
               /{totalLaps}
             </span>
           </div>
@@ -65,11 +65,11 @@ export function WreckfestLapTimer() {
         <button
           type="button"
           onClick={() => setPaused(true)}
-          className="w-8 h-8 rounded-sm bg-black/60 hover:bg-black/80 border border-white/20 flex items-center justify-center text-white/80 hover:text-white pointer-events-auto transition-transform hover:scale-105 active:scale-95 shadow-md"
+          className="w-7 h-7 rounded-sm bg-black/60 hover:bg-black/80 border border-white/20 flex items-center justify-center text-white/80 hover:text-white pointer-events-auto transition-transform hover:scale-105 active:scale-95 shadow-md"
           aria-label="Pause (Esc)"
           title="Pause (Esc)"
         >
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
             <rect x="6" y="5" width="4" height="14" rx="1" />
             <rect x="14" y="5" width="4" height="14" rx="1" />
           </svg>
@@ -77,33 +77,33 @@ export function WreckfestLapTimer() {
       </div>
 
       {/* 3-Row Compact Translucent Table */}
-      <div className="flex flex-col mt-2.5 w-48 bg-black/60 backdrop-blur-sm rounded-sm border border-white/10 text-xs font-mono shadow-xl overflow-hidden divide-y divide-white/10">
+      <div className="flex flex-col mt-2 w-44 bg-black/60 backdrop-blur-sm rounded-sm border border-white/10 text-xs font-mono shadow-xl overflow-hidden divide-y divide-white/10">
         {/* Row 1: TIME */}
-        <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">
+        <div className="flex items-center justify-between px-2.5 py-0.5">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-white/60">
             TIME
           </span>
-          <span className="text-white font-bold tabular-nums text-xs" ref={w.ref('timeVal')}>
+          <span className="text-white font-bold tabular-nums text-[11px]" ref={w.ref('timeVal')}>
             00:00.000
           </span>
         </div>
 
         {/* Row 2: LAP */}
-        <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">
+        <div className="flex items-center justify-between px-2.5 py-0.5">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-white/60">
             LAP
           </span>
-          <span className="text-white font-bold tabular-nums text-xs" ref={w.ref('lapVal')}>
+          <span className="text-white font-bold tabular-nums text-[11px]" ref={w.ref('lapVal')}>
             00:00.000
           </span>
         </div>
 
         {/* Row 3: BEST TIME */}
-        <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">
+        <div className="flex items-center justify-between px-2.5 py-0.5">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-white/60">
             BEST TIME
           </span>
-          <span className="text-white/90 font-bold tabular-nums text-xs">
+          <span className="text-white/90 font-bold tabular-nums text-[11px]">
             {bestLap ? formatWreckfestTime(bestLap) : '00:00.000'}
           </span>
         </div>
