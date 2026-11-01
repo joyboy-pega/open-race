@@ -1,19 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
+/**
+ * PWA Service Worker registrar (runs in production only).
+ * The install prompt banner has been removed per user preference.
+ */
 export function PwaRegister() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
-
   useEffect(() => {
-    // Register Service Worker (production only: in dev a stale cached page served by an old SW
-    // hydrates against freshly-rebuilt HTML/JS and throws a hydration mismatch on every reload).
+    // Register Service Worker in production
     if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
@@ -24,55 +19,7 @@ export function PwaRegister() {
           console.warn('PWA Service Worker registration failed:', err);
         });
     }
-
-    // Listen for installable prompt
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    const handleAppInstalled = () => {
-      setInstalled(true);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-    }
-  };
-
-  if (!deferredPrompt || installed) return null;
-
-  return (
-    <div className="fixed bottom-4 left-4 z-50 pointer-events-auto">
-      <button
-        type="button"
-        onClick={handleInstallClick}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-black transition-transform active:scale-95 shadow-xl"
-        style={{
-          background: 'var(--lime, #c8ff2e)',
-          boxShadow: '0 4px 16px rgba(200, 255, 46, 0.4)',
-          fontFamily: 'var(--font-mono, monospace)',
-          clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)',
-        }}
-        title="Install Open Race app to your device"
-      >
-        <span className="text-sm">📲</span>
-        <span>Install App</span>
-      </button>
-    </div>
-  );
+  return null;
 }
