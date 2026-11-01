@@ -19,7 +19,6 @@ import { AudioBridge } from './AudioBridge';
 import { PostFX } from './fx/PostFX';
 import { Ghost } from './Ghost';
 import { ReplayDirector } from './replay/ReplayDirector';
-import { RearViewMirror } from './RearViewMirror';
 import { DriverNametags } from './car/DriverNametags';
 
 /** Pre-warms the GPU shader cache for all scene materials so the cutscene doesn't hitch. */
@@ -76,7 +75,6 @@ export function GameCanvas() {
           <Ghost />
           <Effects />
           <Camera />
-          <RearViewMirror />
           <DriverNametags />
           <ReplayDirector />
           <PostFX />

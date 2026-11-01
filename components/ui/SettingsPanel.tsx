@@ -63,9 +63,6 @@ export function SettingsPanel() {
       </Field>
 
       <h3 className="k-section-title">HUD</h3>
-      <Field label="Rear view mirror">
-        <Switch checked={s.showRearViewMirror ?? true} onChange={(v) => set({ showRearViewMirror: v })} label="Show rear view mirror" />
-      </Field>
       <Field label="Minimap">
         <Switch checked={s.showMinimap} onChange={(v) => set({ showMinimap: v })} label="Show minimap" />
       </Field>
