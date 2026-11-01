@@ -43,7 +43,7 @@ export function WreckfestLeaderboard() {
   }, [order]);
 
   return (
-    <div className="absolute top-4 left-[152px] md:left-[158px] z-20 flex flex-col items-start select-none pointer-events-none font-sans">
+    <div className="absolute top-4 left-[160px] md:left-[168px] z-20 flex flex-col items-start select-none pointer-events-none font-sans">
       {/* Header Label: "POSITION" */}
       <span className="text-[10px] font-mono font-bold tracking-widest text-white/75 uppercase leading-tight drop-shadow">
         POSITION

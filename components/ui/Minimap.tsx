@@ -1,141 +1,157 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { track } from '@/lib/game/track';
 import { useTicker } from '@/lib/game/useTicker';
 import { world } from '@/lib/game/sim/world';
+import { useGameStore } from '@/lib/game/store';
 
-const W = 124;
-const H = 124;
-const PAD = 12;
+const W = 132;
+const H = 164;
 const DPR = 2;
-
-function bounds() {
-  const { minX: a, maxX: b, minY: c, maxY: d } = track.current.bounds;
-  const s = Math.min((W - PAD * 2) / (b - a), (H - PAD * 2) / (d - c));
-  return { s, ox: W / 2 - ((a + b) / 2) * s, oy: H / 2 - ((c + d) / 2) * s };
-}
-
-let B = bounds();
-const px = (x: number) => x * B.s + B.ox;
-const py = (y: number) => y * B.s + B.oy;
-
-/** Clean circular track ribbon with soft shadow casing, drawn once in monochrome. */
-function drawStatic(): HTMLCanvasElement {
-  const T = track.current;
-  const N = T.N;
-  B = bounds();
-  const cv = document.createElement('canvas');
-  cv.width = W * DPR;
-  cv.height = H * DPR;
-  const ctx = cv.getContext('2d');
-  if (!ctx) return cv;
-  ctx.scale(DPR, DPR);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  const path = (from: number, to: number) => {
-    ctx.beginPath();
-    for (let i = from; i <= to; i += 2) {
-      const k = i % N;
-      if (i === from) ctx.moveTo(px(T.px[k]), py(T.py[k]));
-      else ctx.lineTo(px(T.px[k]), py(T.py[k]));
-    }
-  };
-
-  // Outer dark shadow casing
-  path(0, N);
-  ctx.closePath();
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-  ctx.lineWidth = 6;
-  ctx.stroke();
-
-  // Core bright white track ribbon
-  path(0, N);
-  ctx.closePath();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 3.6;
-  ctx.stroke();
-
-  // Start / finish tick perpendicular to the track
-  const dx = px(T.px[1]) - px(T.px[0]);
-  const dy = py(T.py[1]) - py(T.py[0]);
-  const len = Math.hypot(dx, dy) || 1;
-  const nx = -dy / len;
-  const ny = dx / len;
-  ctx.beginPath();
-  ctx.moveTo(px(T.px[0]) - nx * 5, py(T.py[0]) - ny * 5);
-  ctx.lineTo(px(T.px[0]) + nx * 5, py(T.py[0]) + ny * 5);
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2.4;
-  ctx.stroke();
-
-  return cv;
-}
+// Zoom factor: 1 world unit (0.1m) maps to ~0.08 canvas pixels (~80m view ahead)
+const ZOOM = 0.082;
 
 /**
- * Top-Left Circular Minimap Radar (placed at the top-left, nothing at the bottom):
- * - Circular dark translucent radar disk with white border ring
- * - Pure white circuit ribbon
- * - Yellow heading chevron for player car
- * - White dots for competitor cars
- * - Key hints underneath: [ C ] CAM   [ V ] MIRROR
+ * Zoomed Player-Centered Dynamic GPS Minimap (matching user's uploaded reference):
+ * - Rotates with vehicle heading so driving direction is always facing UP
+ * - Centered on player vehicle
+ * - Shows local road curves, edges, and centerline with high clarity
+ * - Player marker: yellow chevron pointing straight UP
+ * - Competitor cars: cyan/blue dots along the track
+ * - Top-left chip with current position (e.g. 2/24)
  */
 export function Minimap() {
   const ref = useRef<HTMLCanvasElement>(null);
-  const base = useRef<HTMLCanvasElement | null>(null);
-
-  const trackId = track.current.meta.id;
-  useEffect(() => {
-    base.current = drawStatic();
-  }, [trackId]);
+  const position = useGameStore((s) => s.hud.position || 1);
+  const carCount = useGameStore((s) => s.hud.carCount || 20);
 
   useTicker(() => {
     const cv = ref.current;
-    const bg = base.current;
-    if (!cv || !bg) return;
+    if (!cv) return;
     const ctx = cv.getContext('2d');
     if (!ctx) return;
+
+    const player = world.player;
+    if (!player) return;
+    const me = player.phys;
+    const T = track.current;
+    if (!T || !T.px) return;
+
+    const N = T.N;
+    const px = me.x;
+    const py = me.y;
+    const heading = me.a;
+    const curIdx = me.idx ?? 0;
+
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(bg, 0, 0, W, H);
 
-    // AI & competitor cars: clean crisp dots
-    for (const car of world.cars) {
-      if (car.isPlayer) continue;
-      const cx = px(car.phys.x);
-      const cy = py(car.phys.y);
-      ctx.beginPath();
-      ctx.arc(cx, cy, 2.8, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-      ctx.lineWidth = 1.2;
-      ctx.strokeStyle = '#05070b';
-      ctx.stroke();
+    // Apply player-centered Track-Up transform
+    // Player is positioned at (W / 2, H * 0.65) so more road is visible ahead
+    ctx.save();
+    ctx.translate(W / 2, H * 0.65);
+    ctx.rotate(-heading - Math.PI / 2);
+    ctx.scale(ZOOM, ZOOM);
+    ctx.translate(-px, -py);
+
+    // 1. Draw local track road edges (Left & Right boundaries)
+    const rangeBehind = 60;
+    const rangeAhead = 160;
+    const from = curIdx - rangeBehind;
+    const to = curIdx + rangeAhead;
+
+    // Left road edge
+    ctx.beginPath();
+    for (let i = from; i <= to; i += 2) {
+      const k = ((i % N) + N) % N;
+      const hw = T.halfWidth ? T.halfWidth[k] || 65 : 65;
+      const nx = T.nx ? T.nx[k] : 0;
+      const ny = T.ny ? T.ny[k] : 0;
+      const lx = T.px[k] - nx * hw;
+      const ly = T.py[k] - ny * hw;
+      if (i === from) ctx.moveTo(lx, ly);
+      else ctx.lineTo(lx, ly);
+    }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 18;
+    ctx.stroke();
+
+    // Right road edge
+    ctx.beginPath();
+    for (let i = from; i <= to; i += 2) {
+      const k = ((i % N) + N) % N;
+      const hw = T.halfWidth ? T.halfWidth[k] || 65 : 65;
+      const nx = T.nx ? T.nx[k] : 0;
+      const ny = T.ny ? T.ny[k] : 0;
+      const rx = T.px[k] + nx * hw;
+      const ry = T.py[k] + ny * hw;
+      if (i === from) ctx.moveTo(rx, ry);
+      else ctx.lineTo(rx, ry);
+    }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 18;
+    ctx.stroke();
+
+    // 2. Center bright white road line
+    ctx.beginPath();
+    for (let i = from; i <= to; i += 2) {
+      const k = ((i % N) + N) % N;
+      if (i === from) ctx.moveTo(T.px[k], T.py[k]);
+      else ctx.lineTo(T.px[k], T.py[k]);
+    }
+    // Dark shadow casing on center road line
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.lineWidth = 42;
+    ctx.stroke();
+
+    // Solid white road line
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 26;
+    ctx.stroke();
+
+    // 3. Competitor cars: light-blue / cyan dots along the track
+    for (let c = 0; c < world.cars.length; c++) {
+      const other = world.cars[c];
+      if (other.isPlayer) continue;
+
+      const op = other.phys;
+      const dx = op.x - px;
+      const dy = op.y - py;
+      const dist = Math.hypot(dx, dy);
+
+      // Only render cars within local ~110m radar radius
+      if (dist < 1150) {
+        ctx.beginPath();
+        ctx.arc(op.x, op.y, 44, 0, Math.PI * 2);
+        ctx.fillStyle = '#38bdf8'; // Vibrant light blue / cyan matching reference
+        ctx.fill();
+        ctx.lineWidth = 14;
+        ctx.strokeStyle = '#05070b';
+        ctx.stroke();
+      }
     }
 
-    // Player car: vibrant yellow directional chevron pointing along vehicle heading
-    const me = world.player.phys;
-    const mx = px(me.x);
-    const my = py(me.y);
-    const heading = me.a;
+    ctx.restore();
 
+    // 4. Player vehicle: Yellow chevron fixed at center facing straight UP
     ctx.save();
-    ctx.translate(mx, my);
-    ctx.rotate(heading);
+    ctx.translate(W / 2, H * 0.65);
 
-    // Drop shadow on chevron
+    // Chevron drop shadow
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 6;
     ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 1;
 
-    const size = 6.8;
+    // Draw yellow chevron arrow
     ctx.beginPath();
-    ctx.moveTo(size * 1.35, 0);
-    ctx.lineTo(-size * 0.9, -size * 0.75);
-    ctx.lineTo(-size * 0.35, 0);
-    ctx.lineTo(-size * 0.9, size * 0.75);
+    ctx.moveTo(0, -9.5);
+    ctx.lineTo(8.5, 5);
+    ctx.lineTo(4.5, 5);
+    ctx.lineTo(0, -1.5);
+    ctx.lineTo(-4.5, 5);
+    ctx.lineTo(-8.5, 5);
     ctx.closePath();
 
     ctx.fillStyle = '#FFD60A';
@@ -144,7 +160,7 @@ export function Minimap() {
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = 1.6;
     ctx.strokeStyle = '#000000';
     ctx.stroke();
 
@@ -153,25 +169,29 @@ export function Minimap() {
 
   return (
     <div className="absolute top-4 left-5 z-20 flex flex-col items-center gap-1 select-none pointer-events-none font-sans">
-      {/* Circular Radar Disk with White Border */}
-      <div className="w-[124px] h-[124px] rounded-full bg-black/50 border-2 border-white/20 overflow-hidden shadow-2xl flex items-center justify-center p-0.5">
-        <canvas ref={ref} width={W * DPR} height={H * DPR} style={{ width: W, height: H }} />
-      </div>
+      {/* Zoomed GPS Radar Card */}
+      <div
+        className="w-[132px] h-[164px] rounded-2xl bg-black/65 backdrop-blur-md border border-white/20 overflow-hidden shadow-2xl relative flex items-center justify-center p-0.5"
+        style={{
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        {/* Top-Left Position Chip: "2/24" (matching reference image) */}
+        <div className="absolute top-2 left-2.5 z-10 flex items-baseline leading-none font-display italic font-black text-white drop-shadow">
+          <span className="text-xl md:text-2xl text-white tracking-tighter leading-none">{position}</span>
+          <span className="text-xs text-white/70 ml-0.5 font-bold tracking-tight">/{carCount}</span>
+        </div>
 
-      {/* Key Hints Bar */}
-      <div className="flex items-center gap-2 text-[9px] font-mono font-bold text-white/60">
-        <span className="flex items-center gap-1">
-          <kbd className="px-1 py-0.2 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[8px]">
+        {/* Canvas Radar View */}
+        <canvas ref={ref} width={W * DPR} height={H * DPR} style={{ width: W, height: H }} />
+
+        {/* Subtle camera view hint */}
+        <div className="absolute bottom-1.5 right-2 z-10 text-[8px] font-mono font-bold text-white/50 tracking-wider">
+          <kbd className="px-1 py-0.2 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[7px] mr-0.5">
             C
           </kbd>
           CAM
-        </span>
-        <span className="flex items-center gap-1">
-          <kbd className="px-1 py-0.2 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[8px]">
-            V
-          </kbd>
-          MIRROR
-        </span>
+        </div>
       </div>
     </div>
   );
