@@ -259,7 +259,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   quality: 'AUTO',
   showTelemetry: false,
   showMinimap: true,
-  showRearViewMirror: true,
+  showRearViewMirror: false,
   showGhost: true,
 };
 

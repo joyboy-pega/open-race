@@ -5,23 +5,22 @@ import { track } from '@/lib/game/track';
 import { useTicker } from '@/lib/game/useTicker';
 import { world } from '@/lib/game/sim/world';
 
-const W = 320;
-const H = 215;
-const PAD = 16;
+const W = 144;
+const H = 144;
+const PAD = 14;
 const DPR = 2;
-const SECTOR_COLORS = ['#ffb800', '#b36bff', '#00e5ff'];
 
 function bounds() {
   const { minX: a, maxX: b, minY: c, maxY: d } = track.current.bounds;
   const s = Math.min((W - PAD * 2) / (b - a), (H - PAD * 2) / (d - c));
   return { s, ox: W / 2 - ((a + b) / 2) * s, oy: H / 2 - ((c + d) / 2) * s };
 }
-// Projection of the active track; refreshed by drawStatic() whenever the track is (re)drawn.
+
 let B = bounds();
 const px = (x: number) => x * B.s + B.ox;
 const py = (y: number) => y * B.s + B.oy;
 
-/** Track casing + sector-coloured line, drawn once. */
+/** Clean circular track ribbon with soft shadow casing, drawn once in monochrome. */
 function drawStatic(): HTMLCanvasElement {
   const T = track.current;
   const N = T.N;
@@ -44,42 +43,19 @@ function drawStatic(): HTMLCanvasElement {
     }
   };
 
-  // Outer border / highlight for high visibility against dark backgrounds
+  // Outer dark shadow casing
   path(0, N);
   ctx.closePath();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-  ctx.lineWidth = 11;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+  ctx.lineWidth = 7;
   ctx.stroke();
 
-  // Dark asphalt track bed
+  // Core bright white track ribbon
   path(0, N);
   ctx.closePath();
-  ctx.strokeStyle = '#12151c';
-  ctx.lineWidth = 8.5;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 4;
   ctx.stroke();
-
-  // Sectors in vibrant F1 broadcast neon colors
-  const [s1, s2] = T.sectorIdx;
-  [[0, s1], [s1, s2], [s2, N]].forEach(([a, b], k) => {
-    path(a, b);
-    ctx.strokeStyle = SECTOR_COLORS[k];
-    ctx.lineWidth = 4.2;
-    ctx.stroke();
-  });
-
-  // Pit lane
-  ctx.beginPath();
-  const pitCount = (T.pit.exitIdx - T.pit.entryIdx + N) % N;
-  for (let k = 0; k <= pitCount; k += 3) {
-    const j = (T.pit.entryIdx + k) % N;
-    if (k === 0) ctx.moveTo(px(T.px[j]), py(T.py[j]));
-    else ctx.lineTo(px(T.px[j]), py(T.py[j]));
-  }
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([3, 3]);
-  ctx.stroke();
-  ctx.setLineDash([]);
 
   // Start / finish tick perpendicular to the track
   const dx = px(T.px[1]) - px(T.px[0]);
@@ -88,15 +64,23 @@ function drawStatic(): HTMLCanvasElement {
   const nx = -dy / len;
   const ny = dx / len;
   ctx.beginPath();
-  ctx.moveTo(px(T.px[0]) - nx * 7, py(T.py[0]) - ny * 7);
-  ctx.lineTo(px(T.px[0]) + nx * 7, py(T.py[0]) + ny * 7);
+  ctx.moveTo(px(T.px[0]) - nx * 6, py(T.py[0]) - ny * 6);
+  ctx.lineTo(px(T.px[0]) + nx * 6, py(T.py[0]) + ny * 6);
   ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 2.5;
   ctx.stroke();
+
   return cv;
 }
 
-/** Bottom-left radar: static track, live car dots. */
+/**
+ * Wreckfest-style Bottom-Left Circular Minimap Radar (matching reference image):
+ * - Circular dark translucent radar disk with white border ring
+ * - Pure white circuit ribbon
+ * - Yellow heading chevron for player car
+ * - White dots for competitor cars
+ * - Key hints underneath: [ C ] CAM   [ V ] MIRROR
+ */
 export function Minimap() {
   const ref = useRef<HTMLCanvasElement>(null);
   const base = useRef<HTMLCanvasElement | null>(null);
@@ -116,51 +100,78 @@ export function Minimap() {
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(bg, 0, 0, W, H);
 
-    // AI & competitor cars
+    // AI & competitor cars: clean crisp dots
     for (const car of world.cars) {
       if (car.isPlayer) continue;
       const cx = px(car.phys.x);
       const cy = py(car.phys.y);
       ctx.beginPath();
-      ctx.arc(cx, cy, car.inPit ? 3.2 : 4.6, 0, Math.PI * 2);
-      ctx.fillStyle = car.driver.livery.body;
+      ctx.arc(cx, cy, 3.0, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
       ctx.fill();
       ctx.lineWidth = 1.2;
       ctx.strokeStyle = '#05070b';
       ctx.stroke();
     }
 
-    // Player car with glowing halo for instant recognition
+    // Player car: vibrant yellow directional chevron pointing along vehicle heading
     const me = world.player.phys;
     const mx = px(me.x);
     const my = py(me.y);
+    const heading = me.a;
 
+    ctx.save();
+    ctx.translate(mx, my);
+    ctx.rotate(heading);
+
+    // Drop shadow on chevron
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+
+    const size = 7.5;
     ctx.beginPath();
-    ctx.arc(mx, my, 9.5, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(200, 255, 46, 0.35)';
+    ctx.moveTo(size * 1.35, 0);
+    ctx.lineTo(-size * 0.9, -size * 0.75);
+    ctx.lineTo(-size * 0.35, 0);
+    ctx.lineTo(-size * 0.9, size * 0.75);
+    ctx.closePath();
+
+    ctx.fillStyle = '#FFD60A';
     ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(mx, my, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#c8ff2e';
-    ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.lineWidth = 1.6;
     ctx.strokeStyle = '#000000';
     ctx.stroke();
+
+    ctx.restore();
   });
 
   return (
-    <div className="h-root">
-      <div className="h-minimap" aria-label="Track Minimap">
-        <div className="h-minimap-head">
-          <span className="h-minimap-name">BUDDH INTL CIRCUIT</span>
-          <div className="h-minimap-sec">
-            <span style={{ color: SECTOR_COLORS[0] }}>S1</span>
-            <span style={{ color: SECTOR_COLORS[1] }}>S2</span>
-            <span style={{ color: SECTOR_COLORS[2] }}>S3</span>
-          </div>
-        </div>
+    <div className="absolute bottom-6 left-6 z-20 flex flex-col items-center gap-1.5 select-none pointer-events-none font-sans">
+      {/* Circular Radar Disk with White Border */}
+      <div className="w-36 h-36 rounded-full bg-black/45 border-2 border-white/20 overflow-hidden shadow-2xl flex items-center justify-center p-1">
         <canvas ref={ref} width={W * DPR} height={H * DPR} style={{ width: W, height: H }} />
+      </div>
+
+      {/* Key Hints Bar */}
+      <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-white/60">
+        <span className="flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[9px]">
+            C
+          </kbd>
+          CAM
+        </span>
+        <span className="flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[9px]">
+            V
+          </kbd>
+          MIRROR
+        </span>
       </div>
     </div>
   );
