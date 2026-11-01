@@ -168,30 +168,16 @@ export function Minimap() {
   });
 
   return (
-    <div className="absolute top-4 left-5 z-20 flex flex-col items-center gap-1 select-none pointer-events-none font-sans">
-      {/* Zoomed GPS Radar Card */}
+    <div className="absolute top-4 left-5 z-20 flex flex-col items-center select-none pointer-events-none font-sans">
+      {/* Zoomed GPS Radar - 100% Transparent, No Background */}
       <div
-        className="w-[132px] h-[164px] rounded-2xl bg-black/65 backdrop-blur-md border border-white/20 overflow-hidden shadow-2xl relative flex items-center justify-center p-0.5"
+        className="w-[132px] h-[164px] relative flex items-center justify-center bg-transparent"
         style={{
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+          filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.9)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.95))',
         }}
       >
-        {/* Top-Left Position Chip: "2/24" (matching reference image) */}
-        <div className="absolute top-2 left-2.5 z-10 flex items-baseline leading-none font-display italic font-black text-white drop-shadow">
-          <span className="text-xl md:text-2xl text-white tracking-tighter leading-none">{position}</span>
-          <span className="text-xs text-white/70 ml-0.5 font-bold tracking-tight">/{carCount}</span>
-        </div>
-
         {/* Canvas Radar View */}
         <canvas ref={ref} width={W * DPR} height={H * DPR} style={{ width: W, height: H }} />
-
-        {/* Subtle camera view hint */}
-        <div className="absolute bottom-1.5 right-2 z-10 text-[8px] font-mono font-bold text-white/50 tracking-wider">
-          <kbd className="px-1 py-0.2 rounded-sm bg-black/70 border border-white/30 text-white font-bold text-[7px] mr-0.5">
-            C
-          </kbd>
-          CAM
-        </div>
       </div>
     </div>
   );
