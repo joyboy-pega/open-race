@@ -93,19 +93,13 @@ export function Minimap() {
     ctx.lineWidth = 18;
     ctx.stroke();
 
-    // 2. Center bright white road line
+    // 2. Center bright white road line (clean, zero black glow)
     ctx.beginPath();
     for (let i = from; i <= to; i += 2) {
       const k = ((i % N) + N) % N;
       if (i === from) ctx.moveTo(T.px[k], T.py[k]);
       else ctx.lineTo(T.px[k], T.py[k]);
     }
-    // Dark shadow casing on center road line
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.lineWidth = 42;
-    ctx.stroke();
-
-    // Solid white road line
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 26;
     ctx.stroke();
@@ -123,26 +117,20 @@ export function Minimap() {
       // Only render cars within local ~110m radar radius
       if (dist < 1150) {
         ctx.beginPath();
-        ctx.arc(op.x, op.y, 44, 0, Math.PI * 2);
+        ctx.arc(op.x, op.y, 42, 0, Math.PI * 2);
         ctx.fillStyle = '#38bdf8'; // Vibrant light blue / cyan matching reference
         ctx.fill();
-        ctx.lineWidth = 14;
-        ctx.strokeStyle = '#05070b';
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = '#000000';
         ctx.stroke();
       }
     }
 
     ctx.restore();
 
-    // 4. Player vehicle: Yellow chevron fixed at center facing straight UP
+    // 4. Player vehicle: Clean yellow chevron fixed at center facing straight UP (no black glow)
     ctx.save();
     ctx.translate(W / 2, H * 0.65);
-
-    // Chevron drop shadow
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
 
     // Draw yellow chevron arrow
     ctx.beginPath();
@@ -156,11 +144,7 @@ export function Minimap() {
 
     ctx.fillStyle = '#FFD60A';
     ctx.fill();
-
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.2;
     ctx.strokeStyle = '#000000';
     ctx.stroke();
 
@@ -169,13 +153,8 @@ export function Minimap() {
 
   return (
     <div className="absolute top-4 left-5 z-20 flex flex-col items-center select-none pointer-events-none font-sans">
-      {/* Zoomed GPS Radar - 100% Transparent, No Background */}
-      <div
-        className="w-[132px] h-[164px] relative flex items-center justify-center bg-transparent"
-        style={{
-          filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.9)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.95))',
-        }}
-      >
+      {/* Zoomed GPS Radar - 100% Transparent, Pure Crisp Vectors (Zero Black Glow) */}
+      <div className="w-[132px] h-[164px] relative flex items-center justify-center bg-transparent">
         {/* Canvas Radar View */}
         <canvas ref={ref} width={W * DPR} height={H * DPR} style={{ width: W, height: H }} />
       </div>
