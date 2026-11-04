@@ -18,6 +18,7 @@ import { TelemetryPods } from '@/components/ui/TelemetryPods';
 import { MobileControls } from '@/components/ui/MobileControls';
 import { PauseMenu } from '@/components/ui/PauseMenu';
 import { GameOver } from '@/components/ui/GameOver';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 /** Build the world from current settings, then bump the session so the scene remounts against it. */
 export async function startSession() {
@@ -128,7 +129,7 @@ export function RacingGame() {
     router.push('/');
   };
 
-  if (!ready) return null;
+  if (!ready) return <LoadingScreen />;
 
   return (
     <div className="fixed inset-0 w-full h-full min-h-[100dvh] overflow-hidden bg-black select-none font-sans touch-none">
