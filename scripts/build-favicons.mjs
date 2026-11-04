@@ -1,0 +1,218 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { chromium } from 'playwright-core';
+
+const CHROME =
+  process.env.CHROME_PATH ||
+  (process.platform === 'win32'
+    ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+
+const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f131a"/>
+      <stop offset="100%" stop-color="#040507"/>
+    </linearGradient>
+    <linearGradient id="yellowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff133"/>
+      <stop offset="100%" stop-color="#ffe600"/>
+    </linearGradient>
+    <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1a8c"/>
+      <stop offset="100%" stop-color="#e6006e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded card -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Neon Racing Border -->
+  <rect width="480" height="480" x="16" y="16" rx="86" fill="none" stroke="#ffe600" stroke-width="22"/>
+  
+  <!-- Inner Speed Accent -->
+  <rect width="446" height="446" x="33" y="33" rx="72" fill="none" stroke="#ff007a" stroke-width="6" opacity="0.9"/>
+
+  <!-- Top Speed Chevrons (DRS / Apex curbs) -->
+  <g transform="translate(138, 64)">
+    <polygon points="0,0 26,0 52,24 26,24" fill="#00f0ff" opacity="0.95"/>
+    <polygon points="38,0 64,0 90,24 64,24" fill="#ffffff" opacity="0.95"/>
+    <polygon points="76,0 102,0 128,24 102,24" fill="#ff007a" opacity="0.95"/>
+    <polygon points="114,0 140,0 166,24 140,24" fill="#ffe600" opacity="0.95"/>
+    <polygon points="152,0 178,0 204,24 178,24" fill="#00f0ff" opacity="0.95"/>
+  </g>
+
+  <!-- Stylized High-Impact Speed Monogram: "O R" -->
+  <g transform="skewX(-13) translate(76, -4)">
+    <!-- Letter "O" in Electric Yellow -->
+    <path d="M 120 128 
+             L 212 128 
+             C 248 128, 270 154, 270 200 
+             L 270 306 
+             C 270 352, 248 378, 212 378 
+             L 120 378 
+             C 84 378, 62 352, 62 306 
+             L 62 200 
+             C 62 154, 84 128, 120 128 Z
+             M 132 194 
+             L 132 312 
+             C 132 324, 140 330, 154 330 
+             L 178 330 
+             C 192 330, 200 324, 200 312 
+             L 200 194 
+             C 200 182, 192 176, 178 176 
+             L 154 176 
+             C 140 176, 132 182, 132 194 Z" 
+          fill="url(#yellowGrad)" 
+          stroke="#000000" 
+          stroke-width="14" 
+          stroke-linejoin="round"/>
+
+    <!-- Letter "R" in Neon Pink with Racing Leg -->
+    <path d="M 288 128 
+             L 380 128 
+             C 422 128, 442 150, 442 190 
+             C 442 226, 420 246, 382 254 
+             L 446 378 
+             L 380 378 
+             L 330 262 
+             L 330 378 
+             L 288 378 Z
+             M 330 178 
+             L 330 220 
+             L 364 220 
+             C 380 220, 390 212, 390 199 
+             C 390 186, 380 178, 364 178 Z" 
+          fill="url(#pinkGrad)" 
+          stroke="#000000" 
+          stroke-width="14" 
+          stroke-linejoin="round"/>
+  </g>
+
+  <!-- Bottom Racing Checkered Finish Ribbon -->
+  <g transform="translate(96, 412)">
+    <!-- Row 1 -->
+    <rect x="0" y="0" width="40" height="18" fill="#ffffff"/>
+    <rect x="40" y="0" width="40" height="18" fill="#000000"/>
+    <rect x="80" y="0" width="40" height="18" fill="#ffffff"/>
+    <rect x="120" y="0" width="40" height="18" fill="#000000"/>
+    <rect x="160" y="0" width="40" height="18" fill="#ffffff"/>
+    <rect x="200" y="0" width="40" height="18" fill="#000000"/>
+    <rect x="240" y="0" width="40" height="18" fill="#ffffff"/>
+    <rect x="280" y="0" width="40" height="18" fill="#000000"/>
+
+    <!-- Row 2 -->
+    <rect x="0" y="18" width="40" height="18" fill="#000000"/>
+    <rect x="40" y="18" width="40" height="18" fill="#ffffff"/>
+    <rect x="80" y="18" width="40" height="18" fill="#000000"/>
+    <rect x="120" y="18" width="40" height="18" fill="#ffffff"/>
+    <rect x="160" y="18" width="40" height="18" fill="#000000"/>
+    <rect x="200" y="18" width="40" height="18" fill="#ffffff"/>
+    <rect x="240" y="18" width="40" height="18" fill="#000000"/>
+    <rect x="280" y="18" width="40" height="18" fill="#ffffff"/>
+  </g>
+
+  <!-- Arigatoo Star -->
+  <polygon points="76,64 81,78 96,78 84,88 88,102 76,92 64,102 68,88 56,78 71,78" fill="#ffe600"/>
+</svg>`;
+
+// Helper to assemble an ICO file from PNG buffers
+function createIco(images) {
+  // images: array of { width, height, buffer }
+  const count = images.length;
+  const headerSize = 6;
+  const entrySize = 16;
+  let offset = headerSize + count * entrySize;
+
+  const header = Buffer.alloc(headerSize);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // ICO type
+  header.writeUInt16LE(count, 4); // number of images
+
+  const entries = [];
+  for (const img of images) {
+    const entry = Buffer.alloc(entrySize);
+    entry.writeUInt8(img.width >= 256 ? 0 : img.width, 0);
+    entry.writeUInt8(img.height >= 256 ? 0 : img.height, 1);
+    entry.writeUInt8(0, 2); // palette
+    entry.writeUInt8(0, 3); // reserved
+    entry.writeUInt16LE(1, 4); // color planes
+    entry.writeUInt16LE(32, 6); // bits per pixel
+    entry.writeUInt32LE(img.buffer.length, 8); // size of image data
+    entry.writeUInt32LE(offset, 12); // offset of image data
+    entries.push(entry);
+    offset += img.buffer.length;
+  }
+
+  return Buffer.concat([header, ...entries, ...images.map((img) => img.buffer)]);
+}
+
+async function run() {
+  console.log('Writing SVG icons...');
+  fs.writeFileSync('public/icon.svg', svgContent, 'utf-8');
+  fs.writeFileSync('app/icon.svg', svgContent, 'utf-8');
+
+  console.log('Launching headless browser to render PNGs...');
+  const browser = await chromium.launch({
+    executablePath: CHROME,
+    headless: true,
+    args: ['--enable-unsafe-swiftshader'],
+  });
+
+  const page = await browser.newPage();
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+          svg { width: 100vw; height: 100vh; display: block; }
+        </style>
+      </head>
+      <body>
+        ${svgContent}
+      </body>
+    </html>
+  `;
+
+  await page.setContent(html);
+
+  const sizes = [
+    { name: '16', width: 16, height: 16 },
+    { name: '32', width: 32, height: 32 },
+    { name: '48', width: 48, height: 48 },
+    { name: 'apple-touch-icon.png', width: 180, height: 180, dest: 'public/apple-touch-icon.png' },
+    { name: 'icon-192.png', width: 192, height: 192, dest: 'public/icon-192.png' },
+    { name: 'icon-512.png', width: 512, height: 512, dest: 'public/icon-512.png' },
+    { name: 'icon-maskable-512.png', width: 512, height: 512, dest: 'public/icon-maskable-512.png' },
+  ];
+
+  const icoImages = [];
+
+  for (const item of sizes) {
+    await page.setViewportSize({ width: item.width, height: item.height });
+    const buffer = await page.screenshot({ type: 'png', omitBackground: true });
+    if (item.dest) {
+      fs.writeFileSync(item.dest, buffer);
+      console.log(`Saved ${item.dest} (${item.width}x${item.height})`);
+    }
+    if (item.width === 16 || item.width === 32 || item.width === 48) {
+      icoImages.push({ width: item.width, height: item.height, buffer });
+    }
+  }
+
+  await browser.close();
+
+  console.log('Creating favicon.ico...');
+  const icoBuffer = createIco(icoImages);
+  fs.writeFileSync('public/favicon.ico', icoBuffer);
+  fs.writeFileSync('app/favicon.ico', icoBuffer);
+  console.log('Saved public/favicon.ico and app/favicon.ico (16px, 32px, 48px)');
+
+  console.log('Favicon generation complete!');
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
