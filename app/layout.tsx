@@ -2,22 +2,96 @@ import type { Metadata, Viewport } from 'next';
 import { PwaRegister } from '@/components/PwaRegister';
 import './globals.css';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://openrace.club';
+
 export const metadata: Metadata = {
-  title: 'Open Race — by Arigatoo Club',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Open Race — 3D Browser Racing Game by Arigatoo Club',
+    template: '%s | Open Race',
+  },
   description:
-    'Open Race: A browser Formula racing game by Arigatoo Club featuring full grid AI, telemetry, custom liveries, and authentic circuits.',
-  keywords: ['Open Race', 'Arigatoo Club', 'F1', 'Racing Game', 'Three.js', 'Next.js', 'React Three Fiber', 'PWA'],
-  authors: [{ name: 'Arigatoo Club' }],
+    'Experience high-octane 3D browser Formula racing in Open Race by Arigatoo Club. Race against 19 AI opponents across iconic tracks like Monza, Spa, and Buddh Circuit with authentic physics, telemetry, and custom liveries.',
+  keywords: [
+    'Open Race',
+    'Arigatoo Club',
+    '3D Racing Game',
+    'Browser Racing Game',
+    'Formula 1 Simulator',
+    'F1 Web Game',
+    'WebGL Racing',
+    'Three.js Game',
+    'React Three Fiber',
+    'Pegasus 53',
+    'Buddh International Circuit',
+    'Monza Circuit',
+    'Spa-Francorchamps',
+    'Free Online Racing',
+    'PWA Racing Game',
+  ],
+  authors: [{ name: 'Arigatoo Club', url: 'https://openrace.club' }],
+  creator: 'Arigatoo Club',
+  publisher: 'Arigatoo Club',
   applicationName: 'Open Race',
+  generator: 'Next.js',
+  category: 'games',
+  classification: 'Racing Video Game',
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteUrl,
+    siteName: 'Open Race',
+    title: 'Open Race — 3D Browser Racing Game by Arigatoo Club',
+    description:
+      'High-octane 3D browser racing with authentic Grand Prix circuits, 20-car grid AI, live telemetry HUD, and custom liveries.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1440,
+        height: 900,
+        alt: 'Open Race — 3D Browser Racing Game Showroom & Gameplay',
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Open Race — 3D Browser Racing Game by Arigatoo Club',
+    description:
+      'Play Open Race: 3D browser racing simulation featuring 6 world championship circuits, 20-car AI grid, and custom liveries.',
+    creator: '@arigatooclub',
+    site: '@arigatooclub',
+    images: ['/og-image.png'],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Open Race',
   },
   icons: {
-    icon: '/icon.svg',
-    shortcut: '/icon-192.png',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   manifest: '/manifest.webmanifest',
 };
@@ -29,6 +103,38 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: '#0a0a0a',
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': ['VideoGame', 'WebApplication'],
+  name: 'Open Race',
+  alternateName: 'Open Race by Arigatoo Club',
+  url: siteUrl,
+  image: `${siteUrl}/og-image.png`,
+  description:
+    'A high-octane 3D browser racing simulation game featuring authentic Formula 1 circuits, real-time arcade physics, 20-car AI grid, and custom liveries.',
+  genre: ['Racing', 'Simulation', 'Sports', 'Arcade'],
+  gamePlatform: ['Web Browser', 'PC', 'Mobile'],
+  applicationCategory: 'Game',
+  operatingSystem: 'Any',
+  playMode: ['SinglePlayer', 'MultiPlayer'],
+  author: {
+    '@type': 'Organization',
+    name: 'Arigatoo Club',
+    url: siteUrl,
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Arigatoo Club',
+  },
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
+  },
+  inLanguage: 'en',
 };
 
 export default function RootLayout({
@@ -47,6 +153,10 @@ export default function RootLayout({
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body>
         {children}

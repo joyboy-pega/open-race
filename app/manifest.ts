@@ -44,6 +44,13 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     screenshots: [
       {
+        src: '/og-image.png',
+        sizes: '1440x900',
+        type: 'image/png',
+        form_factor: 'wide',
+        label: 'Open Race 3D Showroom and Live Circuit Experience',
+      },
+      {
         src: '/svg/buddh_circuit_clean.svg',
         sizes: '1280x720',
         type: 'image/svg+xml',
