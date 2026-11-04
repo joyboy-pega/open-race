@@ -1347,3 +1347,86 @@
     display: none;
   }
 }
+
+/* Portrait mobile phone adaptation: prevent telemetry overlap */
+@media (max-width: 600px) and (orientation: portrait) {
+  .h-tower {
+    top: 6px;
+    left: 6px;
+    width: 112px;
+  }
+  .h-tw-title {
+    font-size: 11px;
+  }
+  .h-tw-head {
+    height: 18px;
+    padding: 0 4px;
+  }
+  .h-tw-row {
+    grid-template-columns: 14px 2px 1fr 14px;
+    gap: 3px;
+    height: 18px;
+    padding: 0 4px;
+  }
+  .h-tw-gap,
+  .k-comp {
+    display: none;
+  }
+  .h-tw-code {
+    font-size: 10px;
+  }
+  .h-tw-pos {
+    font-size: 10px;
+  }
+  .h-tw-bar {
+    height: 9px;
+  }
+
+  .h-topright {
+    top: 6px;
+    right: 6px;
+    gap: 4px;
+  }
+  .h-lap {
+    width: 116px;
+    padding: 4px 6px;
+  }
+  .h-lap-pos {
+    font-size: 13px;
+  }
+  .h-lap-clock {
+    font-size: 13px;
+  }
+  .h-lap-delta .val {
+    font-size: 10px;
+  }
+  .h-lap-times {
+    font-size: 8px;
+  }
+  .h-lap-sectors {
+    display: none;
+  }
+  .h-pause {
+    width: 26px;
+    height: 26px;
+  }
+
+  .h-cluster {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: 165px;
+    padding: 2px 6px 3px;
+    transform: translateX(-50%) scale(0.85);
+  }
+  .h-gear span {
+    font-size: 26px;
+  }
+  .h-speed b {
+    font-size: 26px;
+  }
+
+  .h-minimap {
+    bottom: max(130px, calc(env(safe-area-inset-bottom) + 120px));
+    transform: scale(0.55);
+    transform-origin: left bottom;
+  }
+}
