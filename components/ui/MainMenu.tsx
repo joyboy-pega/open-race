@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -17,32 +17,38 @@ import { Field, Seg, Slider } from './kit';
 import { TrackPreview } from './TrackPreview';
 import { trackCatalog } from '@/lib/game/track';
 import { parseRecordKey } from '@/lib/game/records';
+import { LoadingScreen } from './LoadingScreen';
+import { TrackSelectModal } from './TrackSelectModal';
 
 const Showroom = dynamic(() => import('./Showroom'), {
   ssr: false,
-  loading: () => <div className="l-showroom-loading">Warming up the garage…</div>,
+  loading: () => <div className="l-showroom-loading">WARMING UP GARAGE…</div>,
 });
 
-const MODES: { id: GameMode; name: string; sub: string }[] = [
-  { id: 'race', name: 'Grand Prix', sub: 'Full grid · pit stops · strategy' },
-  { id: 'qualifying', name: 'Qualifying', sub: 'One-shot / 12-min · sets race grid' },
-  { id: 'timetrial', name: 'Time Trial', sub: 'Solo · chase your ghost' },
-  { id: 'practice', name: 'Free Practice', sub: 'No pressure · test tyres' },
-  { id: 'multiplayer', name: 'Multiplayer', sub: 'P2P WebRTC room · real-time racing' },
-];
+type MainMenuSection = 'career' | 'online' | 'arcade' | 'timetrial' | 'practice' | 'garage' | 'profile' | 'options' | 'crew';
+
+const MENU_ITEMS = [
+  { id: 'career', label: 'CAREER', sub: 'GRAND PRIX' },
+  { id: 'online', label: 'ONLINE', sub: 'P2P ROOM' },
+  { id: 'arcade', label: 'ARCADE', sub: 'QUICK SPRINT' },
+  { id: 'timetrial', label: 'TIME TRIAL', sub: 'HOT LAP' },
+  { id: 'practice', label: 'PRACTICE', sub: 'FREE RUN' },
+  { id: 'garage', label: 'GARAGE', sub: 'CAR TUNING' },
+  { id: 'profile', label: 'PROFILE', sub: 'RECORDS' },
+  { id: 'options', label: 'OPTIONS', sub: 'SETTINGS' },
+  { id: 'crew', label: 'CREW', sub: 'DEV TEAM' },
+] as const;
 
 const PRESETS: { name: string; livery: Omit<Livery, 'number'> }[] = [
   { name: 'Pegasus #53', livery: { body: '#f8fafc', accent: '#dc2626', rim: '#9a6b26' } },
   { name: 'Scarlet', livery: { body: '#e10600', accent: '#121212', rim: '#c0c0c0' } },
   { name: 'Papaya', livery: { body: '#ff8700', accent: '#0072bb', rim: '#1e1e1e' } },
   { name: 'Silver', livery: { body: '#d9dce1', accent: '#111111', rim: '#111111' } },
-  { name: 'Racing green', livery: { body: '#0b5d3b', accent: '#cedc00', rim: '#1e1e1e' } },
+  { name: 'Sunburst', livery: { body: '#ffe600', accent: '#ff007a', rim: '#111111' } },
+  { name: 'Electric Cyan', livery: { body: '#00f0ff', accent: '#ff007a', rim: '#ffffff' } },
   { name: 'Royal', livery: { body: '#1e41b0', accent: '#ffd700', rim: '#c0c0c0' } },
   { name: 'Violet', livery: { body: '#6b21a8', accent: '#f59e0b', rim: '#f59e0b' } },
 ];
-
-const TABS = ['Setup', 'Garage', 'Records', 'Options', 'Team'] as const;
-type Tab = (typeof TABS)[number];
 
 function Colour({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -60,109 +66,245 @@ export function MainMenu() {
   const set = useGameStore((s) => s.setSettings);
   const s: GameSettings = mounted ? stored : DEFAULT_SETTINGS;
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('Setup');
 
-  const race = s.mode === 'race';
-  const quali = s.mode === 'qualifying';
+  // Active navigation choice
+  const [activeNav, setActiveNav] = useState<MainMenuSection>('arcade');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [trackModalOpen, setTrackModalOpen] = useState(false);
+  const [loadingRace, setLoadingRace] = useState(false);
+
   const setLivery = (patch: Partial<Livery>) => set({ livery: { ...s.livery, ...patch } });
   const bestKey = recordKey(s.trackId, s.mode, s.weather);
   const catalog = trackCatalog();
   const trackInfo = catalog.find((t) => t.id === s.trackId) ?? catalog[0];
   const best = mounted ? records.bestLaps[bestKey] : undefined;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const roomParam = params.get('room') || params.get('join');
     if (roomParam) {
       set({ mode: 'multiplayer' });
+      setActiveNav('online');
     }
   }, [set]);
 
+  // Spacebar quick shortcut to open track modal / start race
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === 'Space' && !trackModalOpen) {
+        e.preventDefault();
+        setTrackModalOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [trackModalOpen]);
+
+  const selectNav = (nav: MainMenuSection) => {
+    setActiveNav(nav);
+    if (nav === 'career') {
+      set({ mode: 'race' });
+      setDrawerOpen(false);
+      setTrackModalOpen(true);
+    } else if (nav === 'arcade') {
+      set({ mode: 'race', totalLaps: 3, drivingModel: 'casual' });
+      setDrawerOpen(false);
+      setTrackModalOpen(true);
+    } else if (nav === 'timetrial') {
+      set({ mode: 'timetrial' });
+      setDrawerOpen(false);
+      setTrackModalOpen(true);
+    } else if (nav === 'practice') {
+      set({ mode: 'practice' });
+      setDrawerOpen(false);
+      setTrackModalOpen(true);
+    } else if (nav === 'online') {
+      set({ mode: 'multiplayer' });
+      setDrawerOpen(false);
+      setTrackModalOpen(false);
+    } else {
+      // garage, profile, options, crew
+      setDrawerOpen(true);
+      setTrackModalOpen(false);
+    }
+  };
+
+  const handleStartRace = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setLoadingRace(true);
+  };
+
+  const isRaceMode = activeNav === 'career' || activeNav === 'arcade' || activeNav === 'timetrial' || activeNav === 'practice';
+
+  if (loadingRace) {
+    return <LoadingScreen onComplete={() => router.push('/game')} />;
+  }
+
   return (
-    <main className="l-root" aria-label="Open Race lobby">
-      <header className="l-top">
-        <div className="l-brand">
-          <span className="l-flag" aria-hidden="true" />
-          <div>
-            <h1>Open Race</h1>
-            <p>by Arigatoo Club · {trackInfo.name}</p>
+    <main className="dirt-root" aria-label="Open Race main menu">
+      {/* 3D Showroom Hero Stage */}
+      <div className="dirt-stage">
+        <Showroom
+          model={s.carModel}
+          livery={s.livery}
+          compound={s.startCompound}
+          weather={s.weather}
+        />
+      </div>
+
+      {/* Top Bar with DIRT 5 Style Logo and Status Badges */}
+      <header className="dirt-top">
+        <div className="dirt-logo-wrap">
+          <span className="dirt-logo-kicker">★ ARIGATOO CLUB PRESENTS ★</span>
+          <Link href="/" className="dirt-logo" aria-label="Open Race Home">
+            <span className="dirt-logo-open">OPEN</span>
+            <span className="dirt-logo-race">RACE</span>
+          </Link>
+          <div className="dirt-brand-sub">
+            <span className="dirt-brand-tag">PARODY ARCADE</span>
+            <span className="dirt-brand-author">AN ARIGATOO CLUB GAME</span>
           </div>
         </div>
-        <div className="l-track">
-          <TrackPreview trackId={trackInfo.id} className="l-track-svg" />
-          <dl>
-            <div>
-              <dt>Length</dt>
-              <dd>{(trackInfo.lengthM / 1000).toFixed(3)} km</dd>
-            </div>
-            {trackInfo.turns !== undefined && (
-              <div>
-                <dt>Turns</dt>
-                <dd>{trackInfo.turns}</dd>
-              </div>
-            )}
-            {trackInfo.lapRecord && (
-              <div>
-                <dt>Lap record</dt>
-                <dd>
-                  {formatLapTime(trackInfo.lapRecord.time)} <small>{trackInfo.lapRecord.driver.split(' ')[1]} {trackInfo.lapRecord.year}</small>
-                </dd>
-              </div>
-            )}
-          </dl>
+
+        <div className="dirt-status-bar">
+          <div className="dirt-chip currency" title="Racer Credits">
+            <span className="dirt-chip-num">8,500</span>
+            <span className="dirt-chip-lbl">CR 🪙</span>
+          </div>
+          <div className="dirt-chip level" title="Driver Level">
+            <span className="dirt-chip-num">01</span>
+            <span className="dirt-chip-lbl">LVL ⚡</span>
+          </div>
+          <button
+            type="button"
+            className="dirt-chip net cursor-pointer"
+            onClick={() => selectNav('online')}
+            title="Launch Multiplayer"
+          >
+            <span className="dirt-chip-lbl">JOIN SPLITSCREEN / P2P</span>
+          </button>
+          <div
+            className="dirt-chip track cursor-pointer"
+            title="Choose Circuit"
+            onClick={() => setTrackModalOpen(true)}
+          >
+            <span className="dirt-chip-num" style={{ fontSize: 13, textTransform: 'uppercase' }}>
+              {trackInfo.name}
+            </span>
+            <span className="dirt-chip-lbl">{(trackInfo.lengthM / 1000).toFixed(2)} KM · MAP 🗺️</span>
+          </div>
         </div>
       </header>
 
-      <div className="l-grid">
-        <section className={`l-stage ${s.weather === 'rain' ? 'is-rain' : s.weather === 'snow' ? 'is-snow' : ''}`} aria-label="Your car">
-          <div className="l-showroom">
-            <Showroom model={s.carModel} livery={s.livery} compound={s.startCompound} weather={s.weather} />
-          </div>
-          {(s.weather === 'rain' || s.weather === 'snow') && (
-            <div className={`l-weather-pill ${s.weather}`} aria-live="polite">
-              <span className="l-weather-pill-dot" />
-              <span>{s.weather === 'rain' ? '🌧️ Wet Weather Active' : '❄️ Snow Conditions Active'}</span>
-            </div>
-          )}
-          <div className="l-stage-cap">
-            <span className="l-num">#{s.livery.number}</span>
-            <div>
-              <b>{s.driverName || 'You'}</b>
-              <small>
-                {s.carModel === 'pegasus' ? 'Formula Student (SAE India) · Team Pegasus #53' : s.carModel === 'f1' ? 'Formula car' : 'Tesla Roadster'} · {COMPOUNDS[s.startCompound].name} tyres
-              </small>
-            </div>
-          </div>
-        </section>
+      {/* Weather Indicator */}
+      {(s.weather === 'rain' || s.weather === 'snow') && (
+        <div className="dirt-weather-pill" aria-live="polite">
+          <span>{s.weather === 'rain' ? '🌧️ Wet Weather Active' : '❄️ Snow Conditions Active'}</span>
+        </div>
+      )}
 
-        <section className="l-panel">
-          <div className="l-modes" role="radiogroup" aria-label="Game mode">
-            {MODES.map((m) => (
-              <button key={m.id} type="button" role="radio" aria-checked={s.mode === m.id} className={`l-mode ${s.mode === m.id ? 'on' : ''}`} onClick={() => set({ mode: m.id })}>
-                <b>{m.name}</b>
-                <small>{m.sub}</small>
-              </button>
-            ))}
+      {/* Left Navigation Stack (Solid Flat Color Blocks, NO GRADIENTS) */}
+      <nav className="dirt-menu" aria-label="Main Navigation">
+        {MENU_ITEMS.map((m) => {
+          const isActive = activeNav === m.id;
+          return (
+            <button
+              key={m.id}
+              type="button"
+              className={`dirt-menu-btn ${isActive ? 'active' : ''}`}
+              onClick={() => selectNav(m.id)}
+            >
+              {isActive ? (
+                <>
+                  <span className="dirt-split-left">{m.label}</span>
+                  <span className="dirt-split-right">{m.sub}</span>
+                </>
+              ) : (
+                <>
+                  <span>{m.label}</span>
+                  <span className="dirt-menu-sub">{m.sub}</span>
+                </>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Right-Side Configuration Drawer (Solid Flat) */}
+      {drawerOpen && (
+        <aside className="dirt-drawer" aria-label="Section Details">
+          <div className="dirt-drawer-head">
+            <h2 className="dirt-drawer-title">
+              {activeNav === 'career' && 'GRAND PRIX'}
+              {activeNav === 'online' && 'MULTIPLAYER'}
+              {activeNav === 'arcade' && 'ARCADE SPRINT'}
+              {activeNav === 'timetrial' && 'TIME TRIAL'}
+              {activeNav === 'practice' && 'FREE PRACTICE'}
+              {activeNav === 'garage' && 'GARAGE TUNING'}
+              {activeNav === 'profile' && 'DRIVER PROFILE'}
+              {activeNav === 'options' && 'OPTIONS & CONTROLS'}
+              {activeNav === 'crew' && 'CREW DIRECTORY'}
+              <span className="dirt-drawer-badge">
+                {activeNav === 'garage' ? '3D' : activeNav === 'profile' ? 'STATS' : 'READY'}
+              </span>
+            </h2>
+            <button
+              type="button"
+              className="dirt-drawer-close"
+              onClick={() => setDrawerOpen(false)}
+              title="Close Drawer"
+            >
+              ✕ HIDE
+            </button>
           </div>
 
-          <div className="m-tabs" role="tablist">
-            {TABS.map((t) => (
-              <button key={t} type="button" role="tab" aria-selected={tab === t} className={`m-tab ${tab === t ? 'on' : ''}`} onClick={() => setTab(t)}>
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <div className="l-body">
-            {tab === 'Setup' && (
+          <div className="dirt-drawer-body">
+            {/* Race Modes Setup */}
+            {isRaceMode && (
               <>
+                <div className="dirt-track-card">
+                  <TrackPreview trackId={trackInfo.id} className="dirt-track-svg" />
+                  <div className="dirt-track-info">
+                    <span className="dirt-track-name">{trackInfo.name}</span>
+                    <span className="dirt-track-meta">
+                      {(trackInfo.lengthM / 1000).toFixed(3)} KM · {trackInfo.turns ?? 16} TURNS
+                    </span>
+                    {trackInfo.lapRecord && (
+                      <span style={{ fontSize: '10px', color: '#9aa0a6' }}>
+                        RECORD: {formatLapTime(trackInfo.lapRecord.time)} ({trackInfo.lapRecord.driver.split(' ')[1]})
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 {catalog.length > 1 && (
                   <Field label="Circuit">
-                    <Seg<string> label="Circuit" value={s.trackId} options={catalog.map((t) => ({ value: t.id, label: t.name }))} onChange={(v) => set({ trackId: v })} />
+                    <select
+                      className="l-input"
+                      value={s.trackId}
+                      onChange={(e) => set({ trackId: e.target.value })}
+                      aria-label="Select circuit"
+                      style={{
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-display)',
+                        fontSize: '16px',
+                        letterSpacing: '0.04em',
+                        background: '#12161e',
+                        borderColor: '#2a3142',
+                      }}
+                    >
+                      {catalog.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} ({(t.lengthM / 1000).toFixed(2)} km)
+                        </option>
+                      ))}
+                    </select>
                   </Field>
                 )}
-                {race && (
+
+                {(activeNav === 'career' || activeNav === 'arcade') && (
                   <>
                     <Field label="Laps" value={String(s.totalLaps)}>
                       <Slider label="Laps" min={1} max={20} step={1} value={s.totalLaps} onChange={(v) => set({ totalLaps: v })} />
@@ -189,48 +331,12 @@ export function MainMenu() {
                         onChange={(v) => set({ difficulty: v })}
                       />
                     </Field>
-                    <Field label="Grid slot" value={`P${Math.min(s.gridPosition, s.aiCount + 1)}${s.qualifyingGrid ? ' (Quali)' : ''}`}>
+                    <Field label="Grid slot" value={`P${Math.min(s.gridPosition, s.aiCount + 1)}`}>
                       <Slider label="Grid position" min={1} max={s.aiCount + 1} step={1} value={Math.min(s.gridPosition, s.aiCount + 1)} onChange={(v) => set({ gridPosition: v })} />
                     </Field>
                   </>
                 )}
-                {quali && (
-                  <>
-                    <Field label="Format">
-                      <Seg<'oneshot' | 'short'>
-                        label="Format"
-                        value={s.qualifyingFormat || 'oneshot'}
-                        options={[
-                          { value: 'oneshot', label: 'One-Shot (1 Lap)' },
-                          { value: 'short', label: 'Short (12 Min)' },
-                        ]}
-                        onChange={(v) => set({ qualifyingFormat: v })}
-                      />
-                    </Field>
-                    <Field label="Opponents" value={String(s.aiCount)}>
-                      <Slider
-                        label="Opponents"
-                        min={0}
-                        max={MAX_AI_CARS}
-                        step={1}
-                        value={s.aiCount}
-                        onChange={(v) => set({ aiCount: v })}
-                      />
-                    </Field>
-                    <Field label="Difficulty">
-                      <Seg<Difficulty>
-                        label="Difficulty"
-                        value={s.difficulty}
-                        options={[
-                          { value: 'rookie', label: 'Rookie' },
-                          { value: 'pro', label: 'Pro' },
-                          { value: 'legend', label: 'Legend' },
-                        ]}
-                        onChange={(v) => set({ difficulty: v })}
-                      />
-                    </Field>
-                  </>
-                )}
+
                 <Field label="Weather">
                   <Seg<WeatherType>
                     label="Weather"
@@ -239,6 +345,7 @@ export function MainMenu() {
                     onChange={(v) => set({ weather: v })}
                   />
                 </Field>
+
                 <Field label="Time of day">
                   <Seg<TimeOfDay>
                     label="Time of day"
@@ -251,7 +358,8 @@ export function MainMenu() {
                     onChange={(v) => set({ timeOfDay: v })}
                   />
                 </Field>
-                <Field label="Starting tyre" hint={s.weather === 'rain' || s.weather === 'snow' ? 'Slicks struggle in the wet: pick Inter or Wet.' : undefined}>
+
+                <Field label="Starting tyre" hint={s.weather === 'rain' || s.weather === 'snow' ? 'Slicks struggle in wet conditions: choose Inter or Wet.' : undefined}>
                   <Seg<TyreCompound>
                     label="Starting tyre"
                     value={s.startCompound}
@@ -259,8 +367,9 @@ export function MainMenu() {
                     onChange={(v) => set({ startCompound: v })}
                   />
                 </Field>
+
                 <Field
-                  label="Driving mechanics"
+                  label="Handling model"
                   hint={
                     (s.drivingModel ?? 'casual') === 'hardcore'
                       ? 'Hardcore: Realistic simulation physics'
@@ -268,7 +377,7 @@ export function MainMenu() {
                   }
                 >
                   <Seg<'casual' | 'hardcore'>
-                    label="Driving mechanics"
+                    label="Handling model"
                     value={s.drivingModel ?? 'casual'}
                     options={[
                       { value: 'casual', label: 'Casual' },
@@ -280,9 +389,10 @@ export function MainMenu() {
               </>
             )}
 
-            {tab === 'Garage' && (
+            {/* Garage Tab */}
+            {activeNav === 'garage' && (
               <>
-                <Field label="Car">
+                <Field label="Car Model">
                   <Seg
                     label="Car model"
                     value={s.carModel}
@@ -305,22 +415,35 @@ export function MainMenu() {
                     }}
                   />
                 </Field>
+
                 <div className="l-presets" role="group" aria-label="Livery presets">
                   {PRESETS.map((p) => (
-                    <button key={p.name} type="button" title={p.name} className="l-preset" style={{ background: p.livery.body, borderColor: p.livery.accent }} onClick={() => setLivery(p.livery)} aria-label={`${p.name} livery`} />
+                    <button
+                      key={p.name}
+                      type="button"
+                      title={p.name}
+                      className="l-preset"
+                      style={{ background: p.livery.body, borderColor: p.livery.accent }}
+                      onClick={() => setLivery(p.livery)}
+                      aria-label={`${p.name} livery`}
+                    />
                   ))}
                 </div>
+
                 <div className="l-colours">
                   <Colour label="Body" value={s.livery.body} onChange={(v) => setLivery({ body: v })} />
                   <Colour label="Accent" value={s.livery.accent} onChange={(v) => setLivery({ accent: v })} />
                   <Colour label="Wheels" value={s.livery.rim} onChange={(v) => setLivery({ rim: v })} />
                 </div>
+
                 <Field label="Number" value={`#${s.livery.number}`}>
                   <Slider label="Car number" min={1} max={99} step={1} value={s.livery.number} onChange={(v) => setLivery({ number: v })} />
                 </Field>
+
                 <Field label="Driver name">
                   <input className="l-input" value={s.driverName} maxLength={18} onChange={(e) => set({ driverName: e.target.value })} aria-label="Driver name" />
                 </Field>
+
                 <Field label="Timing code">
                   <input
                     className="l-input l-code"
@@ -333,9 +456,10 @@ export function MainMenu() {
               </>
             )}
 
-            {tab === 'Records' && (
+            {/* Profile & Records Tab */}
+            {activeNav === 'profile' && (
               <div className="l-records">
-                <div className="m-stats">
+                <div className="m-stats" style={{ padding: 0, marginBottom: 16 }}>
                   <div>
                     <small>Races started</small>
                     <b>{mounted ? records.racesStarted : 0}</b>
@@ -353,40 +477,46 @@ export function MainMenu() {
                     <b>{mounted ? records.podiums : 0}</b>
                   </div>
                 </div>
-                <h3 className="k-section-title">Best laps</h3>
-                {mounted && Object.keys(records.bestLaps).length === 0 && <p className="m-empty">Set a lap in Time Trial or Practice to see it here.</p>}
+
+                <h3 className="k-section-title">Personal Best Laps</h3>
+                {mounted && Object.keys(records.bestLaps).length === 0 && (
+                  <p className="m-empty" style={{ color: '#9aa0a6', marginTop: 8 }}>
+                    Set a lap in Time Trial or Practice to see it recorded here.
+                  </p>
+                )}
                 {mounted &&
                   Object.entries(records.bestLaps).map(([key, t]) => {
                     const { trackId, mode, weather } = parseRecordKey(key);
-                    const trackName = catalog.find((t) => t.id === trackId)?.name ?? trackId;
+                    const trackName = catalog.find((cat) => cat.id === trackId)?.name ?? trackId;
                     return (
-                      <div key={key} className="m-lap">
+                      <div key={key} className="m-lap" style={{ marginBottom: 4, background: '#161922', border: '1px solid #232836' }}>
                         <span>
                           {catalog.length > 1 ? `${trackName} · ` : ''}
                           {MODE_NAMES[mode as GameMode] ?? mode} · {WEATHER_LABEL[weather as WeatherType] ?? weather}
                         </span>
-                        <b>{formatLapTime(t)}</b>
+                        <b style={{ color: '#ffe600' }}>{formatLapTime(t)}</b>
                       </div>
                     );
                   })}
               </div>
             )}
 
-            {tab === 'Options' && (
+            {/* Options Tab */}
+            {activeNav === 'options' && (
               <>
                 <SettingsPanel />
-                <h3 className="k-section-title">Controls</h3>
+                <h3 className="k-section-title">Controls Map</h3>
                 <ControlsPanel />
               </>
             )}
 
-            {tab === 'Team' && (
+            {/* Crew Tab */}
+            {activeNav === 'crew' && (
               <div className="l-team-section">
                 <div className="l-wip-badge">
-                  <span className="l-wip-tag">WIP</span>
-                  <span className="l-wip-desc">Active Development Crew</span>
+                  <span className="l-wip-tag">CREW</span>
+                  <span className="l-wip-desc">Arigatoo Club Racing Collective</span>
                 </div>
-                <h3 className="k-section-title">WIP Team</h3>
                 <div className="l-team-grid">
                   {[
                     { name: 'Nirav', code: 'NIR' },
@@ -405,28 +535,129 @@ export function MainMenu() {
                 </div>
               </div>
             )}
+
+            {/* Online Tab */}
+            {activeNav === 'online' && (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <p style={{ color: '#9aa0a6', fontSize: 13, marginBottom: 16 }}>
+                  Connect with friends via WebRTC P2P Room. Real-time physics synchronization and live telemetry!
+                </p>
+                <button
+                  type="button"
+                  className="dirt-launch-btn"
+                  onClick={() => set({ mode: 'multiplayer' })}
+                >
+                  <span>OPEN LOBBY</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="l-start">
-            <div className="l-start-info">
-              <b>{MODE_NAMES[s.mode]}</b>
-              <small>
-                {race
-                  ? `${s.totalLaps} laps · P${Math.min(s.gridPosition, s.aiCount + 1)}/${s.aiCount + 1} · ${s.difficulty}`
-                  : quali
-                  ? `Qualifying · ${s.qualifyingFormat === 'short' ? 'Short (12 Min)' : 'One-Shot (1 Lap)'} · ${s.difficulty}`
-                  : best !== undefined
-                  ? `Your best ${formatLapTime(best)}`
-                  : 'No time set yet'} · {WEATHER_LABEL[s.weather]} · {s.timeOfDay}
-              </small>
+          {/* Massive Flat Solid Launch Button at Bottom of Drawer */}
+          {isRaceMode && (
+            <div className="dirt-drawer-foot">
+              <button
+                type="button"
+                className="dirt-launch-btn"
+                onClick={handleStartRace}
+              >
+                <span>START RACE</span>
+                <span aria-hidden="true">➔</span>
+              </button>
             </div>
-            <Link href="/game" className="l-go">
-              Start
-            </Link>
-          </div>
-        </section>
-      </div>
+          )}
+        </aside>
+      )}
 
+      {/* Showroom Hero Start CTA (Floating Bottom-Right, completely unobstructed car) */}
+      {!drawerOpen && (
+        <div className="dirt-hero-cta" aria-label="Race Launcher">
+          <div
+            className="dirt-hero-track-info"
+            onClick={() => setTrackModalOpen(true)}
+            role="button"
+            tabIndex={0}
+            title="Click to select another track"
+          >
+            <div className="dirt-hero-track-left">
+              <span className="dirt-hero-kicker">SELECTED CIRCUIT</span>
+              <span className="dirt-hero-track-name">{trackInfo.name}</span>
+              <span className="dirt-hero-track-meta">
+                {(trackInfo.lengthM / 1000).toFixed(2)} KM · {trackInfo.turns ?? 16} TURNS · {s.totalLaps} LAPS
+              </span>
+            </div>
+            <button
+              type="button"
+              className="dirt-hero-change-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setTrackModalOpen(true);
+              }}
+            >
+              CHANGE MAP 🗺️
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="dirt-hero-start-btn"
+            onClick={() => setTrackModalOpen(true)}
+          >
+            <span>START RACE</span>
+            <span aria-hidden="true" className="dirt-hero-arrow">➔</span>
+          </button>
+        </div>
+      )}
+
+      {/* Track Selection Modal */}
+      <TrackSelectModal
+        isOpen={trackModalOpen}
+        onClose={() => setTrackModalOpen(false)}
+        onStartRace={() => {
+          setTrackModalOpen(false);
+          setLoadingRace(true);
+        }}
+        settings={s}
+        setSettings={set}
+      />
+
+      {/* Bottom Bar: Car Specs & Controller Hints */}
+      <footer className="dirt-bottom">
+        <div className="dirt-car-badge">
+          <span className="dirt-car-num">#{s.livery.number}</span>
+          <div className="dirt-car-desc">
+            <b>{s.driverName || 'You'}</b>
+            <small>
+              {s.carModel === 'pegasus'
+                ? 'Team Pegasus #53 (SAE)'
+                : s.carModel === 'f1'
+                ? 'Formula One'
+                : 'Tesla Roadster'}{' '}
+              · {COMPOUNDS[s.startCompound].name} TYRES
+            </small>
+          </div>
+        </div>
+
+        <div className="dirt-prompts">
+          <span className="dirt-prompt" onClick={() => setTrackModalOpen(true)} style={{ cursor: 'pointer' }}>
+            <span className="dirt-btn-icon a">A</span> SELECT
+          </span>
+          <span className="dirt-prompt" onClick={() => setTrackModalOpen(true)} style={{ cursor: 'pointer' }}>
+            <span className="dirt-btn-icon x">X</span> RACE
+          </span>
+          <span className="dirt-prompt" onClick={() => selectNav('garage')} style={{ cursor: 'pointer' }}>
+            <span className="dirt-btn-icon y">Y</span> GARAGE
+          </span>
+          <span className="dirt-prompt" onClick={() => setTrackModalOpen(true)} style={{ cursor: 'pointer' }}>
+            <span className="dirt-btn-key">SPACE</span> QUICK START
+          </span>
+          <span className="dirt-prompt">
+            <span className="dirt-btn-key">C</span> ORBIT CAM
+          </span>
+        </div>
+      </footer>
+
+      {/* Multiplayer Lobby Overlay */}
       {s.mode === 'multiplayer' && (
         <MultiplayerLobby
           onStartRace={(roomSettings, players) => {
