@@ -30,10 +30,12 @@ const PRESETS: PresetConfig[] = [
 ];
 
 function Turntable({
+  model,
   livery,
   compound,
   spinning,
 }: {
+  model: VehicleModelType;
   livery: Livery;
   compound: TyreCompound;
   spinning: boolean;
@@ -41,13 +43,19 @@ function Turntable({
   const group = useRef<THREE.Group>(null);
   const car = useMemo(() => {
     const c = makeCar(0, true, 0, 0, compound);
+    c.carModel = model;
     c.phys = createInitialCarState(0, 0);
     c.phys.x = 0;
     c.phys.y = 0;
     c.phys.a = Math.PI / 2; // nose toward +z
-    c.driver = { name: 'You', code: 'YOU', team: 'Player', livery };
+    c.driver = {
+      name: 'You',
+      code: 'YOU',
+      team: model === 'pegasus' ? 'Pegasus' : 'Player',
+      livery,
+    };
     return c;
-  }, [livery, compound]);
+  }, [model, livery, compound]);
 
   useFrame((_, dt) => {
     if (spinning && group.current) {
@@ -203,15 +211,15 @@ export default function Showroom({
       {/* 3D Canvas */}
       <Canvas
         dpr={[1, 1.5]}
-        camera={{ position: [62, 29, 83], fov: 30, near: 1, far: 900 }}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
+        camera={{ position: [48, 22, 70], fov: 32, near: 1, far: 900 }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
       >
-        <color attach="background" args={['#0b0d11']} />
-        <fog attach="fog" args={['#0b0d11', 220, 520]} />
+        <color attach="background" args={['#090a0f']} />
+        <fog attach="fog" args={['#090a0f', 180, 520]} />
         <Environment resolution={128} frames={1}>
           <Lightformer
             form="rect"
-            intensity={2.2}
+            intensity={2.8}
             color="#ffffff"
             position={[0, 40, 10]}
             rotation-x={Math.PI / 2}
@@ -220,15 +228,15 @@ export default function Showroom({
           <Lightformer
             form="rect"
             intensity={2.6}
-            color="#dfe8ff"
+            color="#00f0ff"
             position={[-40, 14, -10]}
             rotation-y={Math.PI / 2}
             scale={[50, 14, 1]}
           />
           <Lightformer
             form="rect"
-            intensity={2.4}
-            color="#ffd9b0"
+            intensity={2.6}
+            color="#ff007a"
             position={[40, 10, 20]}
             rotation-y={-Math.PI / 2}
             scale={[50, 14, 1]}
@@ -236,23 +244,23 @@ export default function Showroom({
           <Lightformer
             form="circle"
             intensity={4}
-            color="#ffffff"
+            color="#ffe600"
             position={[0, 22, -50]}
-            scale={[20, 20, 1]}
+            scale={[24, 24, 1]}
           />
         </Environment>
-        <directionalLight position={[30, 60, 40]} intensity={activeWeather === 'rain' ? 1.05 : 1.4} />
+        <directionalLight position={[30, 60, 40]} intensity={activeWeather === 'rain' ? 1.1 : 1.5} />
         <mesh rotation-x={-Math.PI / 2} position={[0, -0.05, 0]}>
-          <circleGeometry args={[70, 64]} />
+          <circleGeometry args={[200, 64]} />
           <meshStandardMaterial
-            color={activeWeather === 'rain' ? '#0f1218' : activeWeather === 'snow' ? '#181d26' : '#171a20'}
-            roughness={activeWeather === 'rain' ? 0.28 : activeWeather === 'snow' ? 0.72 : 0.85}
-            metalness={activeWeather === 'rain' ? 0.35 : 0.1}
+            color={activeWeather === 'rain' ? '#0b0e14' : activeWeather === 'snow' ? '#181d26' : '#0a0c10'}
+            roughness={activeWeather === 'rain' ? 0.28 : activeWeather === 'snow' ? 0.72 : 0.82}
+            metalness={activeWeather === 'rain' ? 0.4 : 0.15}
           />
         </mesh>
-        <ContactShadows position={[0, 0.02, 0]} opacity={0.55} scale={90} blur={2.4} far={30} />
+        <ContactShadows position={[0, 0.02, 0]} opacity={0.65} scale={95} blur={2.2} far={35} />
         <ShowroomWeather weather={activeWeather} />
-        <Turntable livery={livery} compound={compound} spinning={!freeMode} />
+        <Turntable model={model} livery={livery} compound={compound} spinning={!freeMode} />
         <CameraController
           freeMode={freeMode}
           presetPos={presetPos}
