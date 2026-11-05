@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useMemo, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { world } from '@/lib/game/sim/world';
 import { surfaceHeight, surfaceIndex } from '@/lib/game/track/surface';
 import { renderPose, type Pose } from '@/lib/game/sim/interp';
+import { useGameStore } from '@/lib/game/store';
 
 interface TagData {
   id: number;
@@ -32,24 +33,50 @@ const AVATAR_COLORS = [
   ['#00E5FF', '#00B0FF'],
 ];
 
+// Cache uppercase driver names to eliminate string allocations in the hot loop
+const NAME_CACHE = new Map<string, string>();
+function getCachedUpperName(name: string): string {
+  let cached = NAME_CACHE.get(name);
+  if (!cached) {
+    cached = name.toUpperCase();
+    NAME_CACHE.set(name, cached);
+  }
+  return cached;
+}
+
 /**
  * In-world floating driver markers above nearby rival cars (Wreckfest reference style).
  * Shows a circular portrait avatar with white border + uppercase driver name underneath.
+ * Highly optimized: throttled to 15Hz, skips LOW quality tier, and diff-checks before React state updates.
  */
 export function DriverNametags() {
   const { camera } = useThree();
+  const quality = useGameStore((s) => s.quality);
   const [visibleTags, setVisibleTags] = React.useState<TagData[]>([]);
   const lastUpdate = useRef(0);
+  const prevTagsRef = useRef<TagData[]>([]);
 
   useFrame((state) => {
-    if (world.phase !== 'racing' && world.phase !== 'finished') {
-      if (visibleTags.length > 0) setVisibleTags([]);
+    // Low quality tier sheds 3D HTML projection overhead for maximum FPS
+    if (quality === 'LOW') {
+      if (visibleTags.length > 0) {
+        prevTagsRef.current = [];
+        setVisibleTags([]);
+      }
       return;
     }
 
-    // Throttle to 30Hz for performance
+    if (world.phase !== 'racing' && world.phase !== 'finished') {
+      if (visibleTags.length > 0) {
+        prevTagsRef.current = [];
+        setVisibleTags([]);
+      }
+      return;
+    }
+
+    // Throttle to 15Hz (66ms) - completely fluid for name tags and saves 50% CPU
     const now = state.clock.getElapsedTime();
-    if (now - lastUpdate.current < 0.033) return;
+    if (now - lastUpdate.current < 0.066) return;
     lastUpdate.current = now;
 
     const player = world.player;
@@ -62,6 +89,7 @@ export function DriverNametags() {
     camera.getWorldDirection(camDir);
 
     const candidates: TagData[] = [];
+    const maxCount = quality === 'HIGH' ? 5 : 3;
 
     for (let i = 0; i < world.cars.length; i++) {
       const car = world.cars[i];
@@ -86,7 +114,7 @@ export function DriverNametags() {
 
       candidates.push({
         id: car.id,
-        name: car.driver.name.toUpperCase(),
+        name: getCachedUpperName(car.driver.name),
         avatarSeed: (car.id * 7 + 3) % AVATAR_COLORS.length,
         dist,
         x: cx,
@@ -96,10 +124,35 @@ export function DriverNametags() {
     }
 
     candidates.sort((a, b) => a.dist - b.dist);
-    setVisibleTags(candidates.slice(0, 5));
+    const nextTags = candidates.slice(0, maxCount);
+
+    // Diff check: only update React state if tag IDs changed or positions moved noticeably
+    const prevTags = prevTagsRef.current;
+    let hasChanged = prevTags.length !== nextTags.length;
+
+    if (!hasChanged) {
+      for (let i = 0; i < nextTags.length; i++) {
+        const next = nextTags[i];
+        const prev = prevTags[i];
+        if (
+          next.id !== prev.id ||
+          Math.abs(next.x - prev.x) > 2.0 ||
+          Math.abs(next.y - prev.y) > 2.0 ||
+          Math.abs(next.z - prev.z) > 2.0
+        ) {
+          hasChanged = true;
+          break;
+        }
+      }
+    }
+
+    if (hasChanged) {
+      prevTagsRef.current = nextTags;
+      setVisibleTags(nextTags);
+    }
   });
 
-  if (visibleTags.length === 0) return null;
+  if (visibleTags.length === 0 || quality === 'LOW') return null;
 
   return (
     <group name="driver-nametags">
