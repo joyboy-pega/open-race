@@ -57,6 +57,7 @@ export function RacingGame() {
   const audioEnabled = useGameStore((s) => s.settings.audioEnabled);
   const volume = useGameStore((s) => s.settings.volume);
   const [ready, setReady] = useState(false);
+  const [loadingDone, setLoadingDone] = useState(false);
   const [touch, setTouch] = useState(false);
 
   // Wait for persisted settings to hydrate, then start the first session.
@@ -129,7 +130,9 @@ export function RacingGame() {
     router.push('/');
   };
 
-  if (!ready) return <LoadingScreen />;
+  if (!ready || !loadingDone) {
+    return <LoadingScreen onComplete={() => setLoadingDone(true)} />;
+  }
 
   return (
     <div className="fixed inset-0 w-full h-full min-h-[100dvh] overflow-hidden bg-black select-none font-sans touch-none">

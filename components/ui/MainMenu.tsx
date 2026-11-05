@@ -17,7 +17,6 @@ import { Field, Seg, Slider } from './kit';
 import { TrackPreview } from './TrackPreview';
 import { trackCatalog } from '@/lib/game/track';
 import { parseRecordKey } from '@/lib/game/records';
-import { LoadingScreen } from './LoadingScreen';
 import { TrackSelectModal } from './TrackSelectModal';
 
 const Showroom = dynamic(() => import('./Showroom'), {
@@ -71,7 +70,6 @@ export function MainMenu() {
   const [activeNav, setActiveNav] = useState<MainMenuSection>('arcade');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [trackModalOpen, setTrackModalOpen] = useState(false);
-  const [loadingRace, setLoadingRace] = useState(false);
 
   const setLivery = (patch: Partial<Livery>) => set({ livery: { ...s.livery, ...patch } });
   const bestKey = recordKey(s.trackId, s.mode, s.weather);
@@ -133,14 +131,10 @@ export function MainMenu() {
 
   const handleStartRace = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    setLoadingRace(true);
+    router.push('/game');
   };
 
   const isRaceMode = activeNav === 'career' || activeNav === 'arcade' || activeNav === 'timetrial' || activeNav === 'practice';
-
-  if (loadingRace) {
-    return <LoadingScreen onComplete={() => router.push('/game')} />;
-  }
 
   return (
     <main className="dirt-root" aria-label="Open Race main menu">
@@ -615,7 +609,7 @@ export function MainMenu() {
         onClose={() => setTrackModalOpen(false)}
         onStartRace={() => {
           setTrackModalOpen(false);
-          setLoadingRace(true);
+          router.push('/game');
         }}
         settings={s}
         setSettings={set}
