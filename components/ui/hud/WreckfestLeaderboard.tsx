@@ -12,14 +12,16 @@ import { useGameStore } from '@/lib/game/store';
  * -00:08.5  14.  Fractal Dream (SOLID YELLOW BAR)
  * +00:00.2  15.  Fox__1234
  */
+const EMPTY_ROWS: any[] = [];
+
 export function WreckfestLeaderboard() {
   const position = useGameStore((s) => s.hud.position || 1);
   const carCount = useGameStore((s) => s.hud.carCount || 20);
-  const order = useGameStore((s) => s.hud.order || []);
+  const order = useGameStore((s) => s.hud.order || EMPTY_ROWS);
 
   // Compute the 4 relevant drivers: P1 (Leader), P - 1, P (Player), P + 1
   const rows = React.useMemo(() => {
-    if (order.length === 0) return [];
+    if (order.length === 0) return EMPTY_ROWS;
 
     const pIdx = order.findIndex((r) => r.isPlayer);
     const playerIdx = pIdx >= 0 ? pIdx : 0;
