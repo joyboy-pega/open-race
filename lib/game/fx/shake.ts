@@ -15,6 +15,7 @@ export function addCameraShake(amount: number, cap = 1) {
 
 /** Current shake magnitude (0..1, already squared) and decay; call once per frame from the camera. */
 export function consumeCameraShake(dt: number): number {
+  if (trauma <= 0) return 0;
   const v = trauma * trauma;
   trauma = Math.max(0, trauma - dt * 1.6);
   return v;
