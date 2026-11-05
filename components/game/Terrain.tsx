@@ -35,37 +35,44 @@ export function Terrain() {
     return { grass, macro };
   }, [snow]);
 
+  // Shared single material instances for all 4 quadrant chunks and horizon ring
+  const terrainMat = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      map: textures.grass,
+      lightMap: textures.macro,
+      lightMapIntensity: 0.65,
+      roughness: 0.94,
+      metalness: 0.02,
+    });
+  }, [textures.grass, textures.macro]);
+
+  const mountainMat = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 1.0,
+      fog: true,
+      side: THREE.DoubleSide,
+    });
+  }, []);
+
   useEffect(() => {
     return () => {
       textures.grass.dispose();
+      terrainMat.dispose();
+      mountainMat.dispose();
     };
-  }, [textures]);
+  }, [textures, terrainMat, mountainMat]);
 
   return (
     <group name="terrain">
       {/* 4 quadrant terrain chunks: frustum-culled per chunk, total <= 4 draw calls */}
       {data.chunks.map((chunk, idx) => (
-        <mesh key={idx} geometry={chunk.geometry} receiveShadow>
-          <meshStandardMaterial
-            vertexColors
-            map={textures.grass}
-            lightMap={textures.macro}
-            lightMapIntensity={0.65}
-            roughness={0.94}
-            metalness={0.02}
-          />
-        </mesh>
+        <mesh key={idx} geometry={chunk.geometry} material={terrainMat} receiveShadow />
       ))}
 
       {/* 1 far horizon mountain ring: replaces sphere hills, 1 draw call */}
-      <mesh geometry={data.mountainRing}>
-        <meshStandardMaterial
-          vertexColors
-          roughness={1.0}
-          fog={true}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      <mesh geometry={data.mountainRing} material={mountainMat} />
     </group>
   );
 }
