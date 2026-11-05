@@ -1,5 +1,7 @@
 import { DEFAULT_INPUT_SETTINGS, type GameSettings, type InputSettings } from './gameState';
 
+const PREVENT_DEFAULT_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space']);
+
 export interface ControlState {
   throttle: number; // 0..1
   brake: number; // 0..1
@@ -237,7 +239,7 @@ export class ControlsManager {
   private onKeyDown = (e: KeyboardEvent) => {
     const target = e.target as HTMLElement | null;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) return;
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+    if (PREVENT_DEFAULT_KEYS.has(e.code)) e.preventDefault();
 
     // Check trigger activation (custom or default)
     if (!this.keys[e.code]) {
