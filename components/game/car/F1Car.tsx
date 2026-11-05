@@ -212,8 +212,12 @@ function CarRig({ car, roadster, interpolate }: CarRigProps) {
       Math.min(1, dt * (targetRearHeat > rearBrakeHeatRef.current ? 10 : 3.5)),
     );
 
-    carMats.rimFront.emissiveIntensity = frontBrakeHeatRef.current;
-    carMats.rimRear.emissiveIntensity = rearBrakeHeatRef.current;
+    if (frontBrakeHeatRef.current > 0.005 || carMats.rimFront.emissiveIntensity > 0) {
+      carMats.rimFront.emissiveIntensity = frontBrakeHeatRef.current;
+    }
+    if (rearBrakeHeatRef.current > 0.005 || carMats.rimRear.emissiveIntensity > 0) {
+      carMats.rimRear.emissiveIntensity = rearBrakeHeatRef.current;
+    }
 
     const isBraking = brakeInput > 0.05;
     const isHarvesting = (car.ctrl?.throttle ?? 0) < 0.25 && (p.vf ?? 0) > 35;
