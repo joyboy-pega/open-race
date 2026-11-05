@@ -121,26 +121,28 @@ export class CarFx {
       const vz = p.vy;
 
       // ---- tyre smoke ----
-      for (let w = 0; w < 4; w++) {
-        const slip = w < 2 ? fs : rs;
-        if (slip < 0.14 || kmh < 8) continue;
-        const k = o + A_SMOKE + w;
-        a[k] += (w < 2 ? 38 : 80) * slip * d * dt;
-        let c = Math.min(SPAWN_CAP, Math.floor(a[k]));
-        a[k] -= Math.floor(a[k]);
-        const W = WHEELS[w];
-        while (c-- > 0) {
-          const t = sv() * dt;
-          const wx = q.x + cos * W.f - sin * W.l - vx * t + (sv() - 0.5) * 3;
-          const wz = q.y + sin * W.f + cos * W.l - vz * t + (sv() - 0.5) * 3;
-          const sh = env.light;
-          this.smoke.spawn(
-            wx, carY + 1 + sv() * 2, wz,
-            vx * 0.2 + (sv() - 0.5) * 14, 7 + sv() * 9, vz * 0.2 + (sv() - 0.5) * 14,
-            1.0 + sv() * 1.0, 5 + sv() * 3, 28 + sv() * 16,
-            (0.34 + sv() * 0.2) * Math.min(1, slip * 1.5), sv(),
-            env.smoke[0] * sh, env.smoke[1] * sh, env.smoke[2] * sh, 1.1,
-          );
+      if (kmh >= 8) {
+        for (let w = 0; w < 4; w++) {
+          const slip = w < 2 ? fs : rs;
+          if (slip < 0.14) continue;
+          const k = o + A_SMOKE + w;
+          a[k] += (w < 2 ? 38 : 80) * slip * d * dt;
+          let c = Math.min(SPAWN_CAP, Math.floor(a[k]));
+          a[k] -= Math.floor(a[k]);
+          const W = WHEELS[w];
+          while (c-- > 0) {
+            const t = sv() * dt;
+            const wx = q.x + cos * W.f - sin * W.l - vx * t + (sv() - 0.5) * 3;
+            const wz = q.y + sin * W.f + cos * W.l - vz * t + (sv() - 0.5) * 3;
+            const sh = env.light;
+            this.smoke.spawn(
+              wx, carY + 1 + sv() * 2, wz,
+              vx * 0.2 + (sv() - 0.5) * 14, 7 + sv() * 9, vz * 0.2 + (sv() - 0.5) * 14,
+              1.0 + sv() * 1.0, 5 + sv() * 3, 28 + sv() * 16,
+              (0.34 + sv() * 0.2) * Math.min(1, slip * 1.5), sv(),
+              env.smoke[0] * sh, env.smoke[1] * sh, env.smoke[2] * sh, 1.1,
+            );
+          }
         }
       }
 
