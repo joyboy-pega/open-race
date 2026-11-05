@@ -8,6 +8,7 @@ import { useWriter } from '../domWrite';
 const RPM_IDLE = 3000;
 const RPM_MAX = 11000;
 const NITRO_SEGMENTS = 8;
+const GEAR_STRINGS = ['N', '1', '2', '3', '4', '5', '6', '7', '8'];
 
 /**
  * Top-Right Circular Tachometer & Speedometer (positioned at top-right, nothing at the bottom):
@@ -28,7 +29,7 @@ export function WreckfestSpeedometer() {
     w.text('speedNum', String(Math.round(p.kmh)));
 
     // Gear display (R, N, 1..8)
-    const gearText = p.isReversing ? 'R' : p.gear === 0 ? 'N' : String(p.gear);
+    const gearText = p.isReversing ? 'R' : (GEAR_STRINGS[p.gear] ?? 'N');
     w.text('gearNum', gearText);
 
     // RPM Fraction (0..1)
