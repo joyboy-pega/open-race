@@ -46,7 +46,8 @@ export function Effects() {
   }, [carFx]);
 
   useFrame((state, rawDt) => {
-    if (useGameStore.getState().paused) return;
+    const st = useGameStore.getState();
+    if (st.paused || !!st.results) return;
     const dt = Math.min(rawDt, 0.1);
     fxTime.value += dt;
     const cam = state.camera.position;
