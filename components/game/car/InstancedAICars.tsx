@@ -21,6 +21,7 @@ const _matBody = new THREE.Matrix4();
 const _matWheel = new THREE.Matrix4();
 const _matLocal = new THREE.Matrix4();
 const _matFlap = new THREE.Matrix4();
+const _quatSteer = new THREE.Quaternion();
 const _one = new THREE.Vector3(1, 1, 1);
 const _color = new THREE.Color();
 
@@ -160,6 +161,8 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
 
       // Wheels transforms (FL, FR, RL, RR)
       const steer = -p.steer * 0.45;
+      _euler.set(0, steer, 0, 'YXZ');
+      _quatSteer.setFromEuler(_euler);
 
       for (let w = 0; w < F1_WHEELS.length; w++) {
         const spec = F1_WHEELS[w];
@@ -167,14 +170,9 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
 
         // Local wheel transform: translation + steer rotation (front only) + wheel dimensions scaling
         _pos.set(spec.x, spec.y, spec.z);
-        if (spec.front) {
-          _euler.set(0, steer, 0, 'YXZ');
-          _quat.setFromEuler(_euler);
-        } else {
-          _quat.identity();
-        }
+        const q = spec.front ? _quatSteer : _quat.identity();
         _scale.set(spec.width, spec.radius, spec.radius);
-        _matLocal.compose(_pos, _quat, _scale);
+        _matLocal.compose(_pos, q, _scale);
         _matWheel.multiplyMatrices(_matBody, _matLocal);
         tyresMesh.setMatrixAt(wheelIdx, _matWheel);
 
@@ -182,7 +180,7 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
         // (matches flipRim in F1Car.tsx); otherwise the right rims show their back side.
         if (!spec.left) {
           _scale.x = -spec.width;
-          _matLocal.compose(_pos, _quat, _scale);
+          _matLocal.compose(_pos, q, _scale);
           _matWheel.multiplyMatrices(_matBody, _matLocal);
         }
         rimsMesh.setMatrixAt(wheelIdx, _matWheel);
