@@ -268,6 +268,9 @@ export function TrackProps() {
 
   // Clean up dressing geometries on unmount / track switch
   const bannerGeo = useMemo(() => new THREE.PlaneGeometry(96, 12), []);
+  const lightBoxGeo = useMemo(() => new THREE.BoxGeometry(7.5, 9, 3.4), []);
+  const lightCylGeo = useMemo(() => new THREE.CylinderGeometry(1.5, 1.5, 0.8, 16), []);
+  const gantryHousingMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x0c1018, roughness: 0.7 }), []);
 
   // ---- banners along the catch fence on the main straight ----
   const banners = useMemo(() => {
@@ -329,6 +332,9 @@ export function TrackProps() {
       towers.poles?.dispose();
       towers.heads?.dispose();
       bannerGeo?.dispose();
+      lightBoxGeo.dispose();
+      lightCylGeo.dispose();
+      gantryHousingMat.dispose();
     };
   }, [standGeo, brakeBoards, tyreWalls, sponsors, marshals, paddock, trees, towers, bannerGeo]);
 
@@ -364,13 +370,9 @@ export function TrackProps() {
         </mesh>
         {[-2, -1, 0, 1, 2].map((l, i) => (
           <group key={i} position={[l * 11, 28, 0]}>
-            <mesh>
-              <boxGeometry args={[7.5, 9, 3.4]} />
-              <meshStandardMaterial color={0x0c1018} roughness={0.7} />
-            </mesh>
+            <mesh geometry={lightBoxGeo} material={gantryHousingMat} />
             {[0, 1].map((r) => (
-              <mesh key={r} position={[0, r === 0 ? 1.8 : -1.8, 1.8]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[1.5, 1.5, 0.8, 16]} />
+              <mesh key={r} geometry={lightCylGeo} position={[0, r === 0 ? 1.8 : -1.8, 1.8]} rotation={[Math.PI / 2, 0, 0]}>
                 <meshStandardMaterial
                   ref={(el) => {
                     if (el && r === 0) gantryLights.current[i] = el;
