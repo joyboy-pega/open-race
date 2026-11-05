@@ -302,7 +302,7 @@ export function GameLoop() {
     if (st.lightsLit !== world.lightsLit) st.setLightsLit(world.lightsLit);
 
     hudTimer.current += dt;
-    if (hudTimer.current >= HUD_INTERVAL) {
+    if (!st.paused && hudTimer.current >= HUD_INTERVAL) {
       hudTimer.current = 0;
       st.setHud(world.buildHud());
     }
