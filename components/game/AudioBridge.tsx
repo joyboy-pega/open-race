@@ -32,8 +32,8 @@ export function AudioBridge() {
   );
 
   useFrame((_, delta) => {
-    if (!audio.ready) return;
     const st = useGameStore.getState();
+    if (!audio.ready || !st.settings.audioEnabled) return;
     const pl = world.player;
     const p = pl.phys;
     const f = frame;
