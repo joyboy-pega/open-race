@@ -9,8 +9,9 @@ export function useTicker(cb: (dt: number) => void) {
   cbRef.current = cb;
   useEffect(() => {
     let id = 0;
-    let last = performance.now();
+    let last = 0;
     const loop = (now: number) => {
+      if (last === 0) last = now;
       cbRef.current(Math.min(0.1, (now - last) / 1000));
       last = now;
       id = requestAnimationFrame(loop);
