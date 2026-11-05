@@ -123,6 +123,7 @@ export class WeatherParticles {
   private camVel = new THREE.Vector3();
   private camPos = new THREE.Vector3();
   private first = true;
+  private lastLight = -1;
   private baseColor: THREE.Color;
 
   constructor(kind: 'rain' | 'snow', count: number) {
@@ -181,7 +182,10 @@ export class WeatherParticles {
     this.prevCam.copy(cam);
     (u.uCamVel.value as THREE.Vector3).copy(this.camVel);
     // Keep solid brightness floor so particles catch the light against overcast skies
-    (u.uColor.value as THREE.Color).copy(this.baseColor).multiplyScalar(Math.max(0.65, light));
+    if (Math.abs(this.lastLight - light) > 0.01) {
+      this.lastLight = light;
+      (u.uColor.value as THREE.Color).copy(this.baseColor).multiplyScalar(Math.max(0.65, light));
+    }
   }
 
   dispose() {
