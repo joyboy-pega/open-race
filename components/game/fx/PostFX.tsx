@@ -68,7 +68,10 @@ export function PostFX() {
     if (!v) return;
     const kmh = world.player?.phys.kmh ?? 0;
     const target = 0.5 + Math.min(1, Math.max(0, (kmh - 250) / 100)) * 0.22;
-    v.darkness += (target - v.darkness) * Math.min(1, dt * 3);
+    const diff = target - v.darkness;
+    if (Math.abs(diff) > 0.001) {
+      v.darkness += diff * Math.min(1, dt * 3);
+    }
   });
 
   const grade = GRADE[weather];
