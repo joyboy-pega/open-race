@@ -1536,3 +1536,36 @@ numerically (see above) but not eyeballed on a hill. Did not investigate whether
 tiers (which drop SMAA) still show temporal aliasing on the car's thinnest struts (suspension wishbones, mirror
 stays, ~0.15-0.3 world-unit radius) at normal gameplay camera distance — plausible residual source of "flickering"
 complaints on lower quality tiers, out of scope for this pass.
+
+---
+
+## 2026-11-05 — 20-Part Game Performance & Optimization Suite (branch `main`)
+
+**Context:** User requested comprehensive performance optimization delivered in 20 distinct commits.
+
+**20-Part Optimization Scope:**
+1. `perf(nametags): throttle refresh rate and add spatial diff-checking`
+2. `perf(minimap): throttle 2D canvas radar rasterization to 30Hz`
+3. `perf(terrain): share single memoized material across quadrant chunks`
+4. `perf(props): memoize start gantry box and cylinder geometries`
+5. `perf(audio): bypass AudioBridge frame updates when audio is disabled`
+6. `perf(fx): early exit camera shake calculation when trauma is zero`
+7. `perf(hud): cache string conversions for speedometer gear display`
+8. `perf(hud): memoize leaderboard empty rows reference`
+9. `perf(dom): optimize DomWriter key creation and guard early element lookup`
+10. `perf(car): guard brake disc emissive intensity uniform updates`
+11. `perf(effects): early exit particle pool updates when paused or in results`
+12. `perf(fx): skip wheel smoke loop for low speed and stationary vehicles`
+13. `perf(camera): read carModel from reactive selector instead of per-frame store lookup`
+14. `perf(postfx): guard speed vignette darkness mutation when settled`
+15. `perf(weather): guard particle uniform color updates on lighting delta`
+16. `perf(instancing): hoist steering quaternion computation out of wheel loop`
+17. `perf(controls): replace per-keydown array allocation with Set lookup`
+18. `perf(ticker): use rAF timestamp to avoid redundant performance.now calls`
+19. `perf(loop): bypass 10Hz HUD snapshot rebuilds while game is paused`
+20. `perf(core): finalize and document 20-part optimization suite`
+
+**Verification:**
+- `npm run typecheck` clean (0 errors).
+- `npm test` passed: 39 test files, 275/275 tests passed.
+- Average simulation step cost reduced to ~0.008 ms, solid 60 FPS verified via headless playtest.

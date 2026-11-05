@@ -29,7 +29,8 @@ export function WreckfestSpeedometer() {
     w.text('speedNum', String(Math.round(p.kmh)));
 
     // Gear display (R, N, 1..8)
-    const gearText = p.isReversing ? 'R' : (GEAR_STRINGS[p.gear] ?? 'N');
+    const gearIdx = typeof p.gear === 'number' ? p.gear : 0;
+    const gearText = p.isReversing ? 'R' : (GEAR_STRINGS[gearIdx] ?? 'N');
     w.text('gearNum', gearText);
 
     // RPM Fraction (0..1)
