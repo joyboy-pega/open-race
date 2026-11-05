@@ -26,6 +26,7 @@ export function Camera() {
   const { camera } = useThree();
   const rig = useMemo(() => new CameraRig(), []);
   const viewMode = useGameStore((s) => s.settings.cameraView);
+  const carModel = useGameStore((s) => s.settings.carModel);
   const smoothIntroP = useRef(0);
 
   useFrame((_, dt) => {
@@ -48,7 +49,7 @@ export function Camera() {
     rigCar.isBoosting = p.isBoosting;
     rigCar.drsOpen = p.drsOpen;
     rigCar.idx = p.idx;
-    rigCar.carModel = useGameStore.getState().settings.carModel;
+    rigCar.carModel = carModel;
     const intro = world.isRace && (world.phase === 'grid' || world.phase === 'lights');
     let mode: RigMode = viewMode;
     let introP = 0;
