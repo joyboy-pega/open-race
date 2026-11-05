@@ -40,34 +40,34 @@ export function createWriter(): DomWriter {
       return fn;
     },
     text(name, value) {
-      const key = `${name}|t`;
-      if (cache.get(key) === value) return;
       const el = els.get(name);
       if (!el) return;
+      const key = name + '|t';
+      if (cache.get(key) === value) return;
       cache.set(key, value);
       el.textContent = value;
     },
     css(name, prop, value) {
-      const key = `${name}|c|${prop}`;
-      if (cache.get(key) === value) return;
       const el = els.get(name);
       if (!el) return;
+      const key = name + '|c|' + prop;
+      if (cache.get(key) === value) return;
       cache.set(key, value);
       el.style.setProperty(prop, value);
     },
     cls(name, className, on) {
-      const key = `${name}|k|${className}`;
-      if (cache.get(key) === on) return;
       const el = els.get(name);
       if (!el) return;
+      const key = name + '|k|' + className;
+      if (cache.get(key) === on) return;
       cache.set(key, on);
       el.classList.toggle(className, on);
     },
     attr(name, k, value) {
-      const key = `${name}|a|${k}`;
-      if (cache.get(key) === value) return;
       const el = els.get(name);
       if (!el) return;
+      const key = name + '|a|' + k;
+      if (cache.get(key) === value) return;
       cache.set(key, value);
       el.setAttribute(k, value);
     },
