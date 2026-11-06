@@ -5,6 +5,7 @@ import { trackCatalog, type TrackCatalogEntry } from '@/lib/game/track';
 import { TrackPreview } from './TrackPreview';
 import { formatLapTime, type Difficulty, type GameSettings, type WeatherType } from '@/lib/game/gameState';
 import { recordKey, useGameStore } from '@/lib/game/store';
+import { PixelCross, PixelRain, PixelSnow, PixelSun } from './PixelIcon';
 
 interface TrackSelectModalProps {
   isOpen: boolean;
@@ -24,37 +25,37 @@ const TRACK_DETAILS: Record<
   }
 > = {
   buddh: {
-    flag: '🇮🇳',
+    flag: 'IND',
     tagline: 'F1 Indian Grand Prix · High Elevation & Sweeping Hairpins',
     turns: 16,
     highlight: 'Challenging 1.06km straight & banked multi-apex Turn 10-11',
   },
   monza: {
-    flag: '🇮🇹',
+    flag: 'ITA',
     tagline: 'The Temple of Speed · Ultra High-Speed Slipstream Battle',
     turns: 11,
     highlight: 'Iconic Variante del Rettifilo, Curva Grande & Parabolica',
   },
   redbullring: {
-    flag: '🇦🇹',
+    flag: 'AUT',
     tagline: 'Alpine Rollercoaster · Short, Explosive, Heavy Braking',
     turns: 10,
     highlight: 'Steep climb to Turn 3 with 65m dramatic elevation changes',
   },
   silverstone: {
-    flag: '🇬🇧',
+    flag: 'GBR',
     tagline: 'Home of British Motorsport · Flat-out High-G Sweepers',
     turns: 18,
     highlight: 'Legendary Copse, Maggotts, Becketts & Stowe complex',
   },
   spa: {
-    flag: '🇧🇪',
+    flag: 'BEL',
     tagline: 'The Ardennes Legend · Legendary Eau Rouge & Raidillon',
     turns: 19,
     highlight: '102m elevation sweep through Kemmel Straight & Blanchimont',
   },
   suzuka: {
-    flag: '🇯🇵',
+    flag: 'JPN',
     tagline: 'Figure-8 Masterclass · Demanding Degner & 130R Curves',
     turns: 18,
     highlight: 'Unique crossover bridge, Esses snake & 300+ km/h 130R apex',
@@ -107,7 +108,7 @@ export function TrackSelectModal({
 
   const activeEntry = catalog.find((c) => c.id === selectedTrackId) ?? catalog[0];
   const activeDetails = TRACK_DETAILS[activeEntry.id] ?? {
-    flag: '🏁',
+    flag: 'GP',
     tagline: 'Championship Circuit',
     turns: activeEntry.turns ?? 16,
     highlight: 'High-speed racing circuit',
@@ -130,11 +131,11 @@ export function TrackSelectModal({
 
           <button
             type="button"
-            className="dirt-track-modal-close"
+            className="dirt-track-modal-close flex items-center gap-1.5"
             onClick={onClose}
             aria-label="Close circuit selector"
           >
-            ✕ BACK TO SHOWROOM
+            <PixelCross size={10} /> BACK TO SHOWROOM
           </button>
         </div>
 
@@ -143,7 +144,7 @@ export function TrackSelectModal({
           {catalog.map((track) => {
             const isSelected = track.id === selectedTrackId;
             const details = TRACK_DETAILS[track.id] ?? {
-              flag: '🏁',
+              flag: 'GP',
               tagline: `${track.country} Circuit`,
               turns: track.turns ?? 16,
               highlight: 'Official Racing Circuit',
@@ -173,7 +174,9 @@ export function TrackSelectModal({
 
                 <div className="dirt-circuit-card-header">
                   <div className="dirt-circuit-country">
-                    <span className="dirt-circuit-flag">{details.flag}</span>
+                    <span className="dirt-circuit-flag font-mono font-black text-[10px] px-1.5 py-0.5 bg-[var(--ink-4)] text-[var(--lime)] border border-[var(--edge)]">
+                      {details.flag}
+                    </span>
                     <span className="dirt-circuit-country-name">{track.country}</span>
                   </div>
                   <span className="dirt-circuit-turns-badge">{track.turns ?? details.turns} TURNS</span>
@@ -285,10 +288,22 @@ export function TrackSelectModal({
                   <button
                     key={w}
                     type="button"
-                    className={`dirt-quick-pill ${settings.weather === w ? 'active' : ''}`}
+                    className={`dirt-quick-pill flex items-center gap-1.5 ${settings.weather === w ? 'active' : ''}`}
                     onClick={() => setSettings({ weather: w })}
                   >
-                    {w === 'sunny' ? '☀️ SUNNY' : w === 'rain' ? '🌧️ RAIN' : '❄️ SNOW'}
+                    {w === 'sunny' ? (
+                      <>
+                        <PixelSun size={11} /> SUNNY
+                      </>
+                    ) : w === 'rain' ? (
+                      <>
+                        <PixelRain size={11} /> RAIN
+                      </>
+                    ) : (
+                      <>
+                        <PixelSnow size={11} /> SNOW
+                      </>
+                    )}
                   </button>
                 ))}
               </div>
