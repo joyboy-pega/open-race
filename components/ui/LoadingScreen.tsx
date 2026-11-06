@@ -3,152 +3,49 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getTrackCatalogEntry } from '@/lib/game/track';
 import { useGameStore } from '@/lib/game/store';
+import { PixelCompass } from './PixelIcon';
 
-export const TOTAL_PARTS = 20;
+export const TOTAL_STEPS = 6;
 
-export const PARODY_LOADING_STEPS = [
-  '1/20 · HEATING SLICK TYRES WITH HAIR DRYERS & HOPE',
-  '2/20 · DOWNLOADING 500KG OF EXTRA DOWNFORCE FROM TORRENTS',
-  '3/20 · BRIBING FIA RACE STEWARDS WITH CANNOLI & MASALA CHAI',
-  '4/20 · STRATEGY DESK: "WE ARE CHECKING, SLOW BUTTON ON..."',
-  '5/20 · BONO, MY TYRES ARE DEAD · SETTING PURPLE SECTOR ANYWAY',
-  '6/20 · TURNING OFF TRACTION CONTROL BECAUSE DANGER IS FUN',
-  '7/20 · REPLACING FRONT WING WITH DUCT TAPE & GOOD VIBES',
-  '8/20 · ASKING ADRIAN NEWEY IF AIRFLOW OBEYS TRAFFIC LAWS',
-  '9/20 · INJECTING EXTRA SPICY CHAI INTO HYDRATION SYSTEM',
-  '10/20 · CONSULTING ASTROLOGER FOR OPTIMAL PIT STOP WINDOW',
-  '11/20 · OVERCLOCKING 1000HP LAWNMOWER HYBRID ENGINE',
-  '12/20 · TELLING DRIVER "NO TALKING IN BRAKING ZONE" WHILE TALKING',
-  '13/20 · POLISHING DRIVER HELMET FOR MAXIMUM TV GLAMOUR',
-  '14/20 · INSTALLING EUROBEAT DRIFT PLAYLIST ON CAR BLUETOOTH',
-  '15/20 · ADJUSTING BRAKE BIAS TOWARD WHICHEVER TURN IS SCARIER',
-  '16/20 · REMINDING DRIVER: BRAKING IS JUST ADMITTING DEFEAT',
-  '17/20 · SPEED CAMERA RADAR DETECTOR: BLOCKED ON WHATSAPP',
-  '18/20 · 20-CAR PARODY GRID ROSTER SYNCHRONIZED FOR CHAOS',
-  '19/20 · FINAL RADIO CHECK: "LEAVE ME ALONE, I KNOW WHAT TO DO!"',
-  '20/20 · GREEN LIGHT GREEN LIGHT · SEND IT FULL THROTTLE!',
+export const LOADING_STEPS = [
+  '1/6 · INITIALIZING RACE PHYSICS & DYNAMICS ENGINE',
+  '2/6 · GENERATING TRACK SPLINE & TERRAIN MESHES',
+  '3/6 · COMPILING 3D SHADER PIPELINE & TEXTURES',
+  '4/6 · CALIBRATING AERODYNAMICS & TYRE DEGRADATION',
+  '5/6 · SYNCHRONIZING GRID ROSTER & AI PACE MODELS',
+  '6/6 · GREEN LIGHT READY · GRID FORMATION SET',
 ];
 
-export const PARODY_RADIO_BRIEFINGS = [
+export const RACING_TIPS = [
   {
-    author: 'TEAM RADIO // LAP 0',
-    quote: '“Bono, my tyres are completely gone!”',
-    punchline: 'Driver proceeds to set the all-time track lap record by 1.4 seconds on the very next lap.',
-    tag: 'TYRE DRAMA',
+    topic: 'TRAIL BRAKING // TECHNIQUE',
+    detail: 'Ease off the brake smoothly as you turn in toward the apex to keep front weight loaded and maximize steering bite.',
+    tag: 'CORNERING',
   },
   {
-    author: 'PIT WALL STRATEGY DESK',
-    quote: '“We are switching to Plan G. Repeat, Plan G.”',
-    punchline: 'Plan G stands for: “Good luck, we have absolutely no idea what is happening out there.”',
-    tag: 'STRATEGY 100',
+    topic: 'TYRE MANAGEMENT // OPERATING WINDOW',
+    detail: 'Excessive sliding overheats compound surfaces rapidly. Smooth, progressive steering inputs keep tyres in their optimal grip window.',
+    tag: 'TYRE WEAR',
   },
   {
-    author: 'TEAM RADIO // CORNER 4',
-    quote: '“Leave me alone, I know what to do!”',
-    punchline: 'Famous last words recorded 0.8 seconds before taking an unscheduled tour of the gravel trap.',
-    tag: 'ICEMAN',
+    topic: 'AERODYNAMICS // DRS EFFICIENCY',
+    detail: 'Activate DRS in designated straight zones to dump rear-wing drag and gain a significant top-speed advantage for overtaking.',
+    tag: 'AERO DYNAMICS',
   },
   {
-    author: 'CHIEF RACE ENGINEER',
-    quote: '“We are checking. We will come back to you.”',
-    punchline: 'Pit wall stays completely silent for 8 laps while ordering takeout to the pit lane.',
-    tag: 'CHECKING...',
+    topic: 'RACING LINE // APEX DISCIPLINE',
+    detail: 'Prioritize a late apex on corners leading into long straights so you can get the car rotated early and apply full throttle sooner.',
+    tag: 'RACING LINE',
   },
   {
-    author: 'TELEMETRY ADVISORY',
-    quote: '“If you keep all other 19 cars behind you, you will finish P1.”',
-    punchline: 'Elite mathematics from our 50-person data science department working overtime.',
-    tag: 'BIG BRAIN',
+    topic: 'ERS DEPLOYMENT // HYBRID BOOST',
+    detail: 'Energy harvests under heavy braking. Deploy electric boost exiting slow turns to overcome turbo-lag and launch onto straights.',
+    tag: 'HYBRID ERS',
   },
   {
-    author: 'PIT BOX CONFUSION',
-    quote: '“Box, box, box! NO, STAY OUT! NO WAIT, IN IN IN!”',
-    punchline: 'Mechanics frantically sprinting across the pit lane holding tyres for the wrong car.',
-    tag: 'PANIC MODE',
-  },
-  {
-    author: 'AERO DEVELOPMENT DEPT',
-    quote: '“Front wing damage reported on telemetry.”',
-    punchline: 'Replaced with 3 layers of duct tape and a 5-star Google review. Yields +15 handling.',
-    tag: 'BUDGET CAP',
-  },
-  {
-    author: 'SPEED TRAP SURVEILLANCE',
-    quote: '“Clocked at 334 km/h entering the hairpin zone.”',
-    punchline: 'Local traffic police have issued 4 speeding tickets directly to your team motorhome.',
-    tag: 'VIOLATION',
-  },
-  {
-    author: 'DRIVER COACHING MANUAL',
-    quote: '“Remember: Braking is just admitting defeat to the laws of physics.”',
-    punchline: 'The tyre barrier has been instructed to cushion your vehicle at 250 km/h with warm hospitality.',
-    tag: 'G-FORCE',
-  },
-  {
-    author: 'ENGINE TELEMETRY WARNING',
-    quote: '“Exhaust manifold temp: 125°C.”',
-    punchline: 'Optimum temperature reached for grilling paneer tikka directly on the turbocharger.',
-    tag: 'CHAI BREAK',
-  },
-  {
-    author: 'PEDAL USAGE GUIDE',
-    quote: '“The loud pedal on the right is for eternal glory.”',
-    punchline: 'The squeaky pedal in the middle is exclusively reserved for cowards and timid spectators.',
-    tag: 'FULL THROTTLE',
-  },
-  {
-    author: 'DRS WING MALFUNCTION',
-    quote: '“DRS flap is stuck permanently wide open!”',
-    punchline: 'Car achieves orbital velocity on the back straight. FIA stewarding desk left baffled.',
-    tag: 'WARP SPEED',
-  },
-  {
-    author: 'SLIPSTREAM STRATEGY',
-    quote: '“Tuck in closely behind the car ahead.”',
-    punchline: 'Drafting at 320 km/h allows you to steal their onboard Wi-Fi hotspot and gain +20 km/h.',
-    tag: 'HOTSPOT',
-  },
-  {
-    author: 'HYDRATION ADVISORY',
-    quote: '“Driver reporting strange taste in drink straw.”',
-    punchline: 'Mechanic accidentally filled drink reservoir with triple-shot dark roast espresso. Pace +200%.',
-    tag: 'CAFFEINE',
-  },
-  {
-    author: 'TRACK LIMITS NOTE',
-    quote: '“Stewards are monitoring Turn 9 exit limits.”',
-    punchline: 'Track limits are merely polite artistic suggestions drawn in white paint for casual tourists.',
-    tag: 'OFF TRACK',
-  },
-  {
-    author: 'METEOROLOGY RADAR',
-    quote: '“100% chance of torrential rain in 4 minutes.”',
-    punchline: 'Pit wall decides to bolt on dry slick tyres just to observe the artistic spin-outs.',
-    tag: 'WEATHER RNG',
-  },
-  {
-    author: 'RADIO COMMUNICATION TEST',
-    quote: '“Can you hear me now over engine noise?”',
-    punchline: '“No, I can only hear Eurobeat synth bass. Turning the steering wheel and praying.”',
-    tag: 'COMMS',
-  },
-  {
-    author: 'TYRE WEAR REPORT',
-    quote: '“Rubber wear reached 100%. Driving on pure aluminum rims.”',
-    punchline: 'Shower of golden sparks emitting from wheels. Crowd scores the sparks 10/10.',
-    tag: 'SPARKS',
-  },
-  {
-    author: 'SAFETY CAR INTERLUDE',
-    quote: '“Safety car deployed onto the racing surface.”',
-    punchline: 'Safety car driver took the wrong exit and is currently ordering burgers at the drive-thru.',
-    tag: 'SAFETY FIRST',
-  },
-  {
-    author: 'FINAL GRID COMMAND',
-    quote: '“When the five red lights extinguish: Pin the throttle.”',
-    punchline: 'Do not lift off the gas until you see the checkered flag, victory champagne, or ancestors.',
-    tag: 'VICTORY LAP',
+    topic: 'SLIPSTREAM // DRAFTING ZONES',
+    detail: 'Running directly behind a competitor reduces air resistance, providing a speed surge before pulling out to brake into the corner.',
+    tag: 'OVERTAKING',
   },
 ];
 
@@ -158,7 +55,7 @@ interface LoadingScreenProps {
 
 export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [stepIdx, setStepIdx] = useState(0);
-  const [quoteIdx, setQuoteIdx] = useState(0);
+  const [tipIdx, setTipIdx] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
 
   const trackId = useGameStore((s) => s.settings.trackId);
@@ -172,32 +69,32 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
     }
   }, [isFinishing, onComplete]);
 
-  // Advance loading steps through 20 parts (~120ms each = ~2.4s total)
+  // Advance loading steps through 6 stages
   useEffect(() => {
     const stepInterval = setInterval(() => {
       setStepIdx((prev) => {
-        if (prev < TOTAL_PARTS - 1) {
+        if (prev < TOTAL_STEPS - 1) {
           return prev + 1;
         }
         clearInterval(stepInterval);
         finishLoading();
         return prev;
       });
-    }, 120);
+    }, 280);
 
     return () => clearInterval(stepInterval);
   }, [finishLoading]);
 
-  // Cycle comedy quotes every 2.6s
+  // Cycle racing tips periodically
   useEffect(() => {
-    const quoteInterval = setInterval(() => {
-      setQuoteIdx((prev) => (prev + 1) % PARODY_RADIO_BRIEFINGS.length);
-    }, 2600);
+    const tipInterval = setInterval(() => {
+      setTipIdx((prev) => (prev + 1) % RACING_TIPS.length);
+    }, 3200);
 
-    return () => clearInterval(quoteInterval);
+    return () => clearInterval(tipInterval);
   }, []);
 
-  // Keyboard shortcut to skip / send it
+  // Keyboard shortcut to skip / start
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'Enter') {
@@ -209,14 +106,13 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [finishLoading]);
 
-  const activePart = isFinishing ? TOTAL_PARTS : Math.min(TOTAL_PARTS, stepIdx + 1);
-  const progressPct = Math.round((activePart / TOTAL_PARTS) * 100);
+  const activeStep = isFinishing ? TOTAL_STEPS : Math.min(TOTAL_STEPS, stepIdx + 1);
+  const progressPct = Math.round((activeStep / TOTAL_STEPS) * 100);
+  const currentTip = RACING_TIPS[tipIdx % RACING_TIPS.length];
 
-  const currentQuote = PARODY_RADIO_BRIEFINGS[quoteIdx % PARODY_RADIO_BRIEFINGS.length];
-
-  const handleNextJoke = (e: React.MouseEvent) => {
+  const handleNextTip = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setQuoteIdx((prev) => (prev + 1) % PARODY_RADIO_BRIEFINGS.length);
+    setTipIdx((prev) => (prev + 1) % RACING_TIPS.length);
   };
 
   return (
@@ -264,7 +160,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)',
             }}
           >
-            <span>★ ARIGATOO CLUB · 20-PART PARODY SIMULATION ★</span>
+            <span>SIMULATION INITIALIZATION · REAL-TIME TELEMETRY</span>
           </div>
 
           <h1
@@ -282,11 +178,11 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             className="text-[11px] font-black uppercase tracking-[0.2em]"
             style={{ color: 'var(--lime)', fontFamily: 'var(--font-mono)' }}
           >
-            PARODY GRID PREPARATION · {trackInfo.name}
+            SESSION PREPARATION · {trackInfo.name}
           </div>
         </div>
 
-        {/* Track Satire Stats Row */}
+        {/* Track Telemetry Stats Row */}
         <div
           className="w-full grid grid-cols-3 gap-2 py-2 px-3"
           style={{
@@ -316,7 +212,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
               className="text-[9px] font-bold uppercase tracking-wider text-[var(--ink-mute)]"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
-              CORNERS TO SURVIVE
+              CORNERS
             </span>
             <span
               className="text-sm sm:text-base font-black text-[var(--lime)]"
@@ -331,51 +227,49 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
               className="text-[9px] font-bold uppercase tracking-wider text-[var(--ink-mute)]"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
-              TRACK RECORD
+              SESSION FORMAT
             </span>
             <span
               className="text-sm sm:text-base font-black text-[var(--orange)]"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
-              1:12.4 (THE STIG)
+              SPRINT RACE
             </span>
           </div>
         </div>
 
-        {/* 20-Part Divided Progress Bar Container */}
+        {/* Segmented Progress Bar Container */}
         <div className="w-full flex flex-col gap-2">
           <div
             className="flex justify-between items-center text-[11px] font-bold tracking-wider"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <span className="truncate pr-2 text-[var(--ink-mute)]">
-              {isFinishing
-                ? 'ALL 20 PARTS LOADED · CLEARED FOR LAUNCH'
-                : PARODY_LOADING_STEPS[stepIdx]}
+              {isFinishing ? 'ALL SUBSYSTEMS READY · CLEARED FOR LAUNCH' : LOADING_STEPS[stepIdx]}
             </span>
             <span
               className="font-black text-xs shrink-0 flex items-center gap-1"
               style={{ color: 'var(--lime)', fontFamily: 'var(--font-mono)' }}
             >
-              <span>PART {activePart}/{TOTAL_PARTS}</span>
+              <span>STAGE {activeStep}/{TOTAL_STEPS}</span>
               <span className="text-[var(--ink-dim)]">({progressPct}%)</span>
             </span>
           </div>
 
-          {/* 20 Segmented Parts */}
+          {/* 6 Segmented Parts */}
           <div
             className="w-full gap-1 p-1"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(20, minmax(0, 1fr))',
+              gridTemplateColumns: `repeat(${TOTAL_STEPS}, minmax(0, 1fr))`,
               backgroundColor: 'var(--ink)',
               border: '2px solid var(--ink-4)',
               clipPath:
                 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)',
             }}
           >
-            {Array.from({ length: TOTAL_PARTS }).map((_, i) => {
-              const isFilled = i < activePart;
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+              const isFilled = i < activeStep;
               return (
                 <div
                   key={i}
@@ -385,14 +279,14 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                     boxShadow: isFilled ? '0 0 6px rgba(255, 230, 0, 0.6)' : 'none',
                     opacity: isFilled ? 1 : 0.35,
                   }}
-                  title={`Part ${i + 1} of 20`}
+                  title={`Stage ${i + 1} of ${TOTAL_STEPS}`}
                 />
               );
             })}
           </div>
         </div>
 
-        {/* Parody Radio & Engineer Briefing Card (20 Laughs Collection) */}
+        {/* Race Engineering Briefing Card */}
         <div
           className="w-full p-3.5 sm:p-4 text-left flex flex-col gap-1.5"
           style={{
@@ -408,7 +302,8 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
               className="text-[10px] font-black tracking-[0.2em] uppercase flex items-center gap-1.5"
               style={{ color: 'var(--orange)', fontFamily: 'var(--font-mono)' }}
             >
-              <span>📻 {currentQuote.author}</span>
+              <PixelCompass size={12} />
+              <span>{currentTip.topic}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
@@ -419,36 +314,29 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                   fontFamily: 'var(--font-mono)',
                 }}
               >
-                {currentQuote.tag}
+                {currentTip.tag}
               </span>
               <button
                 type="button"
-                onClick={handleNextJoke}
+                onClick={handleNextTip}
                 className="text-[9px] font-black uppercase px-2 py-0.5 hover:bg-[var(--ink-3)] cursor-pointer transition-colors"
                 style={{
                   border: '1px solid var(--edge)',
                   color: 'var(--ink-text)',
                   fontFamily: 'var(--font-mono)',
                 }}
-                title="Next parody laugh"
+                title="Next driving tip"
               >
-                ↻ JOKE ({quoteIdx + 1}/20)
+                ↻ TIP ({tipIdx + 1}/{RACING_TIPS.length})
               </button>
             </div>
           </div>
 
           <p
-            className="text-xs sm:text-sm leading-snug m-0 text-white font-bold"
+            className="text-xs sm:text-sm leading-relaxed m-0 text-white font-medium"
             style={{ fontFamily: 'var(--font-ui)' }}
           >
-            {currentQuote.quote}
-          </p>
-
-          <p
-            className="text-[11px] sm:text-xs leading-relaxed m-0 text-[var(--ink-mute)] font-medium"
-            style={{ fontFamily: 'var(--font-ui)' }}
-          >
-            {currentQuote.punchline}
+            {currentTip.detail}
           </p>
         </div>
 
@@ -466,15 +354,15 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             onClick={finishLoading}
             className="ml-auto px-4 py-2 text-xs font-black uppercase tracking-wider cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              backgroundColor: activePart >= 10 ? 'var(--lime)' : 'var(--ink-3)',
-              color: activePart >= 10 ? 'var(--ink)' : 'var(--ink-text)',
+              backgroundColor: activeStep >= 3 ? 'var(--lime)' : 'var(--ink-3)',
+              color: activeStep >= 3 ? 'var(--ink)' : 'var(--ink-text)',
               border: '2px solid var(--edge)',
               clipPath:
                 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)',
               fontFamily: 'var(--font-ui)',
             }}
           >
-            {isFinishing ? 'LAUNCHING...' : 'SEND IT NOW ➔'}
+            {isFinishing ? 'LAUNCHING...' : 'START SESSION ➔'}
           </button>
         </div>
       </div>
