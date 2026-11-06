@@ -2,17 +2,9 @@
 
 import React from 'react';
 import { useGameStore } from '@/lib/game/store';
+import type { TimingRow } from '@/lib/game/gameState';
 
-/**
- * Wreckfest-style Top-Left Position & 4-Row Leaderboard Delta Table (positioned beside minimap at top-left):
- * POSITION
- * 14/48
- * -00:08.5  1.   TheHollywood
- * -00:00.1  13.  SomTex
- * -00:08.5  14.  Fractal Dream (SOLID YELLOW BAR)
- * +00:00.2  15.  Fox__1234
- */
-const EMPTY_ROWS: any[] = [];
+const EMPTY_ROWS: TimingRow[] = [];
 
 export function WreckfestLeaderboard() {
   const position = useGameStore((s) => s.hud.position || 1);
@@ -65,13 +57,7 @@ export function WreckfestLeaderboard() {
       <div className="flex flex-col gap-0.5 mt-2 w-52 md:w-56">
         {rows.map((row) => {
           const isPlayer = row.isPlayer;
-
-          let delta = row.gapToLeader;
-          if (row.position === 1) {
-            delta = isPlayer ? 'LEADER' : '-00:08.5';
-          } else if (!delta || delta === 'LEADER') {
-            delta = isPlayer ? '-00:08.5' : '+00:00.2';
-          }
+          const delta = row.position === 1 ? 'LEADER' : (row.gapToLeader || '--');
 
           return (
             <div
