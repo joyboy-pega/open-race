@@ -215,14 +215,6 @@ export const WEATHER_NAMES: Record<WeatherType, string> = {
   dynamic: 'DYNAMIC',
 };
 
-export const WEATHER_ICONS: Record<WeatherType, string> = {
-  sunny: '☀️',
-  cloudy: '☁️',
-  rain: '🌧️',
-  snow: '❄️',
-  dynamic: '🌦️',
-};
-
 // Car-to-car collision shape: three circles along the heading derived from dimensions.ts (PLAN-v3 §5.3 V4).
 export const COLLISION_CONFIG = {
   offsets: COLLISION_OFFSETS_UNSCALED.map((k) => k * CAR_SCALE),
