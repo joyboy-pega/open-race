@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { controls, ControlHold, ControlTrigger } from '@/lib/game/controls';
+import { PixelBolt, PixelCamera, PixelDot } from './PixelIcon';
 
 /**
  * Mobile touch driving controls using the ergonomic `.mc-*` HUD system.
@@ -57,7 +58,7 @@ export function MobileControls() {
           <button
             type="button"
             {...bindControl('cameraCycleRequested')}
-            className={`mc-btn mc-small ${activeControls['cameraCycleRequested'] ? 'on' : ''}`}
+            className={`mc-btn mc-small flex items-center justify-center gap-1 ${activeControls['cameraCycleRequested'] ? 'on' : ''}`}
             aria-label="Cycle Camera View"
             title="Cycle Camera View (C)"
             style={{
@@ -65,7 +66,7 @@ export function MobileControls() {
               color: '#ffffff',
             }}
           >
-            📷 CAM
+            <PixelCamera size={11} /> CAM
           </button>
           <button
             type="button"
@@ -110,7 +111,7 @@ export function MobileControls() {
           <button
             type="button"
             {...bindControl('ersBoost')}
-            className={`mc-btn mc-small ${activeControls['ersBoost'] ? 'on' : ''}`}
+            className={`mc-btn mc-small flex items-center justify-center gap-1 ${activeControls['ersBoost'] ? 'on' : ''}`}
             aria-label="Deploy ERS Electric Boost"
             title="Deploy ERS Electric Boost"
             style={{
@@ -118,12 +119,12 @@ export function MobileControls() {
               color: activeControls['ersBoost'] ? '#000' : 'var(--purple, #b36bff)',
             }}
           >
-            ⚡ ERS
+            <PixelBolt size={11} /> ERS
           </button>
           <button
             type="button"
             {...bindControl('drsToggleRequested')}
-            className={`mc-btn mc-small ${activeControls['drsToggleRequested'] ? 'on' : ''}`}
+            className={`mc-btn mc-small flex items-center justify-center gap-1 ${activeControls['drsToggleRequested'] ? 'on' : ''}`}
             aria-label="Toggle DRS Flap"
             title="Toggle DRS Flap"
             style={{
@@ -131,7 +132,7 @@ export function MobileControls() {
               color: activeControls['drsToggleRequested'] ? '#000' : 'var(--green, #00d26a)',
             }}
           >
-            🟢 DRS
+            <PixelDot size={7} /> DRS
           </button>
         </div>
 
