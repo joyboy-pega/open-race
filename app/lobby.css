@@ -1,7 +1,6 @@
 /* ==========================================================================
-   Open Race — Flat Solid Arcade Theme (DIRT 5 Homage & Parody)
-   100% Solid Flat Colors: Electric Yellow, Hot Pink, Electric Cyan, Jet Black.
-   ZERO Gradients · ZERO AI Slop · Pure Neo-Brutalist Arcade Poster Graphic Style.
+   Open Race — Arcade & Showroom Interface Theme
+   High-contrast arcade aesthetic: Electric Lime, Orange, Jet Black.
    ========================================================================== */
 
 .dirt-root {
@@ -173,16 +172,6 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 2px 6px;
-}
-
-.dirt-chip.currency .dirt-chip-lbl {
-  background: #ffe600;
-  color: #000000;
-}
-
-.dirt-chip.level .dirt-chip-lbl {
-  background: #ff007a;
-  color: #ffffff;
 }
 
 .dirt-chip.net .dirt-chip-lbl {
@@ -581,34 +570,6 @@
   color: #9aa0a6;
 }
 
-.dirt-btn-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 900;
-  line-height: 1;
-  color: #000000;
-  border: 1px solid #000000;
-}
-
-.dirt-btn-icon.a {
-  background: #ffe600;
-}
-
-.dirt-btn-icon.x {
-  background: #00f0ff;
-}
-
-.dirt-btn-icon.y {
-  background: #ff007a;
-  color: #ffffff;
-}
-
 .dirt-btn-key {
   display: inline-flex;
   align-items: center;
@@ -811,94 +772,6 @@
   letter-spacing: 0.2em;
   text-align: center;
 }
-
-/* ------------------------------------------------------------- Team / Crew Cards */
-.l-team-section {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.l-wip-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: #141722;
-  border: 2px solid #000000;
-  box-shadow: 4px 4px 0 #ff007a;
-}
-
-.l-wip-tag {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 900;
-  padding: 2px 7px;
-  background: #ff007a;
-  color: #ffffff;
-  letter-spacing: 0.12em;
-}
-
-.l-wip-desc {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: #9aa0a6;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.l-team-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.l-team-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: #151924;
-  border: 2px solid #000000;
-  box-shadow: 3px 3px 0 #000000;
-  transition: all 0.12s ease;
-}
-
-.l-team-card:hover {
-  border-color: #00f0ff;
-  box-shadow: 4px 4px 0 #00f0ff;
-}
-
-.l-team-dot {
-  width: 8px;
-  height: 8px;
-  background: #ffe600;
-  flex-shrink: 0;
-}
-
-.l-team-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.l-team-name {
-  font-family: var(--font-ui);
-  font-size: 15px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.03em;
-}
-
-.l-team-code {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: #9aa0a6;
-  letter-spacing: 0.12em;
-}
-
-
 
 /* ------------------------------------------------------------- Showroom Hero Start CTA (Unobstructed Car View) */
 .dirt-hero-cta {
@@ -1494,12 +1367,8 @@
   .dirt-status-bar {
     gap: 6px;
   }
-  .dirt-chip.net,
-  .dirt-chip.level {
+  .dirt-chip.net {
     display: none;
-  }
-  .dirt-chip.currency {
-    padding: 3px 7px;
   }
   .dirt-chip-num {
     font-size: 12px;
@@ -1777,9 +1646,6 @@
 
 /* ------------------------------------------------------------- Small Phone Screens (<= 520px Portrait) */
 @media (max-width: 520px) {
-  .dirt-chip.currency {
-    display: none !important;
-  }
   .dirt-chip.track {
     padding: 3px 6px !important;
     max-width: 170px !important;
