@@ -6,6 +6,7 @@ import { useTicker } from '@/lib/game/useTicker';
 import { useGameStore } from '@/lib/game/store';
 import { useWriter } from './domWrite';
 import { tempColor, tempWord } from './format';
+import { PixelCross } from './PixelIcon';
 
 const TYRES = [
   { id: 'fl', label: 'FRONT LEFT' },
@@ -52,12 +53,12 @@ export function TelemetryPods() {
             <span ref={w.ref('tele-state')}>OPTIMAL</span>
             <button
               type="button"
-              className="h-tele-close"
+              className="h-tele-close flex items-center justify-center"
               onClick={() => useGameStore.getState().toggleTelemetry()}
               aria-label="Close telemetry (T)"
               title="Close telemetry (T)"
             >
-              ✕
+              <PixelCross size={8} />
             </button>
           </div>
         </div>

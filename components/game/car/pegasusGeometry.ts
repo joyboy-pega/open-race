@@ -203,7 +203,7 @@ export function getPegasusNoseConeTexture(livery: Livery, driverCode = 'PEG'): T
 
   ctx.fillStyle = secInk;
   ctx.font = 'bold 22px "Chakra Petch", sans-serif';
-  ctx.fillText(`⚙ ${driverCode}   BOSCH   MOTUL`, -430, -45);
+  ctx.fillText(`[${driverCode}]   BOSCH   MOTUL`, -430, -45);
 
   ctx.restore();
 

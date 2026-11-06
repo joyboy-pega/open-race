@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useGameStore } from '@/lib/game/store';
+import { PixelBolt } from '../PixelIcon';
 
 const COLS = [1, 2, 3, 4, 5];
 
@@ -26,7 +27,9 @@ export function StartLights() {
       </div>
       <div className={`h-lights-cap ${lit >= 5 ? 'brace' : ''}`}>
         {lit >= 5 ? (
-          <span className="h-brace-text">⚡ BRACE · REVS UP</span>
+          <span className="h-brace-text flex items-center justify-center gap-1.5">
+            <PixelBolt size={12} /> BRACE · REVS UP
+          </span>
         ) : lit === 0 ? (
           'FORMATION COMPLETE'
         ) : (
