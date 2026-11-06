@@ -44,8 +44,9 @@ export function WreckfestSpeedometer() {
     const arcColor = rpmFrac > 0.88 ? '#FF4D5E' : rpmFrac > 0.6 ? '#FF7A18' : '#FFD60A';
     w.css('rpmArc', 'stroke', arcColor);
 
-    // Nitro / Boost Segments
+    // Nitro / ERS Segments & Percentage
     const ersFrac = Math.max(0, Math.min(1, p.ersCharge / 100));
+    w.text('ersPct', String(Math.round(p.ersCharge)));
     const activeSegs = Math.round(ersFrac * NITRO_SEGMENTS);
 
     for (let i = 0; i < NITRO_SEGMENTS; i++) {
@@ -133,33 +134,9 @@ export function WreckfestSpeedometer() {
         </div>
       </div>
 
-      {/* Row of 4 Subsystem Status Icons (Engine, Transmission, Differential, Wheels) */}
-      <div className="flex items-center gap-1.5 mt-[-6px] px-1.5 py-0.5 rounded bg-black/40 border border-white/10 shadow">
-        {/* Engine Icon */}
-        <svg viewBox="0 0 24 24" className="w-3 h-3 text-white/80 fill-current" aria-label="Engine">
-          <path d="M7 4V2H5v2H3v3H1v2h2v6H1v2h2v3h2v-2h2v2h2v-2h2v2h2v-2h2v2h2v-3h2v-2h2v-2h-2V7h2V5h-2V2h-2v2h-2V2h-2v2H7zm8 4h2v2h-2V8zm0 4h2v2h-2v-2zM9 8h2v2H9V8zm0 4h2v2H9v-2z" />
-        </svg>
-
-        {/* Transmission Icon */}
-        <svg viewBox="0 0 24 24" className="w-3 h-3 text-white/80 fill-current" aria-label="Transmission">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-        </svg>
-
-        {/* Differential Icon */}
-        <svg viewBox="0 0 24 24" className="w-3 h-3 text-white/80 fill-current" aria-label="Drivetrain">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-        </svg>
-
-        {/* Wheels / Suspension Icon */}
-        <svg viewBox="0 0 24 24" className="w-3 h-3 text-white/80 fill-current" aria-label="Suspension">
-          <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
-          <circle cx="12" cy="12" r="3" fill="currentColor" />
-        </svg>
-      </div>
-
-      {/* Segmented Nitro / Health Meter: "100 ▮▮▮▮▮▮▮▮" */}
-      <div className="flex items-center gap-1 mt-1.5">
-        <span className="text-[10px] font-mono font-bold text-white/80 tracking-tight">
+      {/* Segmented ERS / Boost Meter: "[ERS %] ▮▮▮▮▮▮▮▮" */}
+      <div className="flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded bg-black/50 border border-white/10 shadow">
+        <span className="text-[10px] font-mono font-bold text-white/80 tracking-tight" ref={w.ref('ersPct')}>
           100
         </span>
         <div className="flex items-center gap-0.5">
