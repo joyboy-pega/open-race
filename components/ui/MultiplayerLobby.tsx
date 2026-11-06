@@ -6,6 +6,7 @@ import type { PlayerInfo, RoomSettings } from '@/lib/game/multiplayer/protocol';
 import { trackCatalog } from '@/lib/game/track';
 import { WEATHER_LABEL } from './format';
 import type { Livery, TimeOfDay, VehicleModelType, WeatherType } from '@/lib/game/constants';
+import { PixelCheck, PixelClipboard, PixelDot, PixelHourglass, PixelWarning } from './PixelIcon';
 
 interface MultiplayerLobbyProps {
   onStartRace: (settings: RoomSettings, players: PlayerInfo[], isHost: boolean) => void;
@@ -38,9 +39,9 @@ const CAR_MODELS: { id: VehicleModelType; label: string; badge: string }[] = [
 ];
 
 const TIME_OPTIONS: { id: TimeOfDay; label: string }[] = [
-  { id: 'day', label: '☀️ Day (Clear Sun)' },
-  { id: 'sunset', label: '🌅 Sunset (Golden Hour)' },
-  { id: 'night', label: '🌙 Night (Floodlights)' },
+  { id: 'day', label: 'Day (Clear Sun)' },
+  { id: 'sunset', label: 'Sunset (Golden Hour)' },
+  { id: 'night', label: 'Night (Floodlights)' },
 ];
 
 const getPresetLivery = (teamName: string, defaultNum = 1): Livery => {
@@ -298,8 +299,8 @@ export function MultiplayerLobby({ onStartRace, onBack }: MultiplayerLobbyProps)
             <div className="p-4 bg-white/5 border border-white/10 flex flex-col gap-3">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-mono px-2 py-0.5 bg-[var(--lime)]/20 text-[var(--lime)] font-bold uppercase rounded border border-[var(--lime)]/30">
-                    🟢 ONLINE WEBRTC P2P
+                  <span className="text-[10px] font-mono px-2 py-0.5 bg-[var(--lime)]/20 text-[var(--lime)] font-bold uppercase rounded border border-[var(--lime)]/30 flex items-center gap-1.5">
+                    <PixelDot size={8} /> ONLINE WEBRTC P2P
                   </span>
                   <span className="text-xs font-mono px-2 py-0.5 bg-white/10 text-white/80 rounded">
                     {players.length} / 20 Players
@@ -307,13 +308,21 @@ export function MultiplayerLobby({ onStartRace, onBack }: MultiplayerLobbyProps)
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-[10px] font-mono px-2.5 py-1 font-bold uppercase ${
+                    className={`text-[10px] font-mono px-2.5 py-1 font-bold uppercase flex items-center gap-1.5 ${
                       players.length >= 2
                         ? 'bg-[var(--lime)]/20 text-[var(--lime)] border border-[var(--lime)]'
                         : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
                     }`}
                   >
-                    {players.length >= 2 ? '✓ Ready (2+ Players)' : '⏳ Waiting for Player 2'}
+                    {players.length >= 2 ? (
+                      <>
+                        <PixelCheck size={10} /> Ready (2+ Players)
+                      </>
+                    ) : (
+                      <>
+                        <PixelHourglass size={10} /> Waiting for Player 2
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
@@ -332,7 +341,15 @@ export function MultiplayerLobby({ onStartRace, onBack }: MultiplayerLobbyProps)
                   onClick={handleCopyLink}
                   className="shrink-0 px-4 py-2 bg-[var(--lime)] text-black font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg"
                 >
-                  {copied ? '✓ Link Copied!' : '📋 Copy Invite Link'}
+                  {copied ? (
+                    <>
+                      <PixelCheck size={12} /> Link Copied!
+                    </>
+                  ) : (
+                    <>
+                      <PixelClipboard size={12} /> Copy Invite Link
+                    </>
+                  )}
                 </button>
               </div>
               <p className="text-[11px] font-mono text-white/50">
@@ -474,8 +491,16 @@ export function MultiplayerLobby({ onStartRace, onBack }: MultiplayerLobbyProps)
                 <span className="text-[10px] font-mono text-white/60 tracking-wider">
                   GRID ENTRANTS ({players.length}/20)
                 </span>
-                <span className="text-[10px] font-mono text-white/40">
-                  {players.length < 2 ? '⚠️ Need 2 players minimum to race' : '✓ Ready to start'}
+                <span className="text-[10px] font-mono text-white/40 flex items-center gap-1.5">
+                  {players.length < 2 ? (
+                    <>
+                      <PixelWarning size={11} /> Need 2 players minimum to race
+                    </>
+                  ) : (
+                    <>
+                      <PixelCheck size={11} /> Ready to start
+                    </>
+                  )}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
@@ -523,13 +548,19 @@ export function MultiplayerLobby({ onStartRace, onBack }: MultiplayerLobbyProps)
             <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-3">
               <button
                 onClick={handleToggleReady}
-                className={`py-2 px-5 text-xs font-mono uppercase font-bold border transition-colors cursor-pointer ${
+                className={`py-2 px-5 text-xs font-mono uppercase font-bold border transition-colors cursor-pointer flex items-center gap-1.5 ${
                   isReady
                     ? 'border-[var(--lime)] bg-[var(--lime)]/20 text-[var(--lime)]'
                     : 'border-white/30 text-white hover:border-white/60'
                 }`}
               >
-                {isReady ? 'READY ✓' : 'READY UP'}
+                {isReady ? (
+                  <>
+                    READY <PixelCheck size={10} />
+                  </>
+                ) : (
+                  'READY UP'
+                )}
               </button>
 
               {isHost ? (
