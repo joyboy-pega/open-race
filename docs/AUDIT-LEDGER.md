@@ -1,8 +1,7 @@
 # Full Codebase Audit Ledger & Verification Record
 
-> **Auditor**: Senior Code Auditor & Principal Engine Architect
-> **Date**: 2026-10-27
-> **Repository**: `f1-game` (Simulart Tracks by Arigatoo Club)
+> **Audit Scope**: Validation Gates & Engine Verification Ledger
+> **Repository**: `open-race` (Arigatoo Club)
 > **Status**: COMPLETE & VERIFIED
 
 ---

@@ -3,9 +3,8 @@
 Written 2026-10-22 from a full audit of `main` @ `8e3a492` (typecheck, 29 tests and build all green).
 v2 (`docs/PLAN.md`) is history: it records how the current game was built. **This file is the plan to execute next.**
 
-**Who executes this:** a Sonnet agent working alone, one task at a time, in a long session.
-**Read §0 and §1 completely before touching code.** Then work through §9 in order. Every task in §3–§8 is
-self-contained: *why → files → steps → acceptance → tests*. Do not start a task whose dependencies are not ✅.
+This document outlines the simulation, tracks, graphics, and performance architecture roadmap.
+Every workstream is self-contained: *why → files → steps → acceptance → tests*.
 
 ---
 
