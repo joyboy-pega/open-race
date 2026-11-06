@@ -82,25 +82,11 @@ lib/game/sim/        fixed-step world simulation, race state, AI driver
 docs/                PLAN.md, the design and workstream plan
 scripts/             shoot.mjs, the headless screenshot tool
 public/              static assets served by Next.js
-legacy/              standalone prototype pages from before the Next.js app
 ```
 
 ## Architecture
 
 The simulation runs on a fixed 120 Hz step in a single `world` singleton in `lib/game/sim/`. Player and AI cars share the same physics function, and AI cars differ only in where their controls come from. React never holds per-frame simulation state: 3D components read `world` inside `useFrame`, and the DOM HUD reads it through a ticker hook. The zustand store carries only settings and UI-rate data at 10 Hz or less. See [`docs/PLAN.md`](docs/PLAN.md) section 3 for the full layout and rules.
-
-## Legacy prototypes
-
-The `legacy/` folder holds the original standalone HTML and JavaScript prototypes that predate the Next.js app. They are not used by the app and are kept for reference:
-
-- `legacy/index.html` is the telemetry and SVG track dashboard. Its styles and scripts are in `legacy/assets/`.
-- `legacy/Buddh Circuit – F1 Cockpit.html` and `legacy/Buddh Circuit – F1 Cockpit.canvas2d.html` are standalone cockpit driving prototypes (three.js and canvas 2D).
-- `legacy/garage.html`, `legacy/duo_race.html`, and `legacy/multiplayer_race.html` are the earlier garage, split-screen, and peer-to-peer multiplayer pages.
-- `legacy/test_brake_physics.js` and `legacy/test_tire_physics.js` are standalone physics checks.
-- `legacy/data/` holds the track data in JavaScript and JSON form.
-- `legacy/drafts/` holds unfinished experiments.
-
-Open the HTML files directly in a browser to run them. Some pages load libraries from a CDN, so they need an internet connection.
 
 ## Team
 
