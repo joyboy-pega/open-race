@@ -11,6 +11,7 @@ import { createInitialCarState } from '@/lib/game/physics';
 import { makeCar } from '@/lib/game/sim/world';
 import { useGameStore } from '@/lib/game/store';
 import { ShowroomWeather } from './ShowroomWeather';
+import { PixelGamepad, PixelMouse, PixelRotate } from './PixelIcon';
 
 type PresetId = 'front34' | 'side' | 'cockpit' | 'rear' | 'wheel';
 
@@ -170,19 +171,19 @@ export default function Showroom({
       <div className="l-showroom-toolbar" aria-label="Showroom camera modes">
         <button
           type="button"
-          className={`l-showroom-btn ${!freeMode ? 'on' : ''}`}
+          className={`l-showroom-btn flex items-center gap-1.5 ${!freeMode ? 'on' : ''}`}
           onClick={() => toggleFreeMode(false)}
           title="Automatic turntable rotation"
         >
-          🔄 Spin
+          <PixelRotate size={12} /> Spin
         </button>
         <button
           type="button"
-          className={`l-showroom-btn ${freeMode ? 'on' : ''}`}
+          className={`l-showroom-btn flex items-center gap-1.5 ${freeMode ? 'on' : ''}`}
           onClick={() => toggleFreeMode(true)}
           title="Interactive 360 free orbit inspection"
         >
-          🎮 Free Mode
+          <PixelGamepad size={12} /> Free Mode
         </button>
       </div>
 
@@ -190,7 +191,9 @@ export default function Showroom({
       {freeMode && (
         <>
           <div className="l-showroom-hint">
-            <span>🖱️ Drag to orbit · Scroll to zoom</span>
+            <span className="flex items-center gap-1.5">
+              <PixelMouse size={12} /> Drag to orbit · Scroll to zoom
+            </span>
           </div>
 
           <div className="l-showroom-presets" role="toolbar" aria-label="Camera presets">
