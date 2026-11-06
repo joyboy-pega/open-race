@@ -18,24 +18,23 @@ import { TrackPreview } from './TrackPreview';
 import { trackCatalog } from '@/lib/game/track';
 import { parseRecordKey } from '@/lib/game/records';
 import { TrackSelectModal } from './TrackSelectModal';
+import { PixelCross, PixelMap, PixelRain, PixelSnow } from './PixelIcon';
 
 const Showroom = dynamic(() => import('./Showroom'), {
   ssr: false,
   loading: () => <div className="l-showroom-loading">WARMING UP GARAGE…</div>,
 });
 
-type MainMenuSection = 'career' | 'online' | 'arcade' | 'timetrial' | 'practice' | 'garage' | 'profile' | 'options' | 'crew';
+type MainMenuSection = 'arcade' | 'timetrial' | 'practice' | 'online' | 'garage' | 'profile' | 'options';
 
 const MENU_ITEMS = [
-  { id: 'career', label: 'CAREER', sub: 'GRAND PRIX' },
-  { id: 'online', label: 'ONLINE', sub: 'P2P ROOM' },
-  { id: 'arcade', label: 'ARCADE', sub: 'QUICK SPRINT' },
+  { id: 'arcade', label: 'RACE', sub: 'SPRINT VS AI' },
   { id: 'timetrial', label: 'TIME TRIAL', sub: 'HOT LAP' },
   { id: 'practice', label: 'PRACTICE', sub: 'FREE RUN' },
+  { id: 'online', label: 'ONLINE', sub: 'P2P ROOM' },
   { id: 'garage', label: 'GARAGE', sub: 'CAR TUNING' },
   { id: 'profile', label: 'PROFILE', sub: 'RECORDS' },
   { id: 'options', label: 'OPTIONS', sub: 'SETTINGS' },
-  { id: 'crew', label: 'CREW', sub: 'DEV TEAM' },
 ] as const;
 
 const PRESETS: { name: string; livery: Omit<Livery, 'number'> }[] = [
@@ -87,26 +86,25 @@ export function MainMenu() {
     }
   }, [set]);
 
-  // Spacebar quick shortcut to open track modal / start race
+  // Keyboard shortcuts: Space for quick race, G for garage
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.code === 'Space' && !trackModalOpen) {
         e.preventDefault();
         setTrackModalOpen(true);
+      } else if (e.code === 'KeyG' && !drawerOpen && !trackModalOpen) {
+        e.preventDefault();
+        selectNav('garage');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [trackModalOpen]);
+  }, [trackModalOpen, drawerOpen]);
 
   const selectNav = (nav: MainMenuSection) => {
     setActiveNav(nav);
-    if (nav === 'career') {
-      set({ mode: 'race' });
-      setDrawerOpen(false);
-      setTrackModalOpen(true);
-    } else if (nav === 'arcade') {
+    if (nav === 'arcade') {
       set({ mode: 'race', totalLaps: 3, drivingModel: 'casual' });
       setDrawerOpen(false);
       setTrackModalOpen(true);
@@ -123,7 +121,7 @@ export function MainMenu() {
       setDrawerOpen(false);
       setTrackModalOpen(false);
     } else {
-      // garage, profile, options, crew
+      // garage, profile, options
       setDrawerOpen(true);
       setTrackModalOpen(false);
     }
@@ -134,7 +132,7 @@ export function MainMenu() {
     router.push('/game');
   };
 
-  const isRaceMode = activeNav === 'career' || activeNav === 'arcade' || activeNav === 'timetrial' || activeNav === 'practice';
+  const isRaceMode = activeNav === 'arcade' || activeNav === 'timetrial' || activeNav === 'practice';
 
   return (
     <main className="dirt-root" aria-label="Open Race main menu">
@@ -148,29 +146,21 @@ export function MainMenu() {
         />
       </div>
 
-      {/* Top Bar with DIRT 5 Style Logo and Status Badges */}
+      {/* Top Bar with Brand Logo and Status Badges */}
       <header className="dirt-top">
         <div className="dirt-logo-wrap">
-          <span className="dirt-logo-kicker">★ ARIGATOO CLUB PRESENTS ★</span>
+          <span className="dirt-logo-kicker">ARIGATOO CLUB</span>
           <Link href="/" className="dirt-logo" aria-label="Open Race Home">
             <span className="dirt-logo-open">OPEN</span>
             <span className="dirt-logo-race">RACE</span>
           </Link>
           <div className="dirt-brand-sub">
-            <span className="dirt-brand-tag">PARODY ARCADE</span>
-            <span className="dirt-brand-author">AN ARIGATOO CLUB GAME</span>
+            <span className="dirt-brand-tag">ARCADE SIMULATION</span>
+            <span className="dirt-brand-author">BUDDH INTERNATIONAL CIRCUIT</span>
           </div>
         </div>
 
         <div className="dirt-status-bar">
-          <div className="dirt-chip currency" title="Racer Credits">
-            <span className="dirt-chip-num">8,500</span>
-            <span className="dirt-chip-lbl">CR 🪙</span>
-          </div>
-          <div className="dirt-chip level" title="Driver Level">
-            <span className="dirt-chip-num">01</span>
-            <span className="dirt-chip-lbl">LVL ⚡</span>
-          </div>
           <button
             type="button"
             className="dirt-chip net cursor-pointer"
@@ -187,7 +177,9 @@ export function MainMenu() {
             <span className="dirt-chip-num" style={{ fontSize: 13, textTransform: 'uppercase' }}>
               {trackInfo.name}
             </span>
-            <span className="dirt-chip-lbl">{(trackInfo.lengthM / 1000).toFixed(2)} KM · MAP 🗺️</span>
+            <span className="dirt-chip-lbl flex items-center gap-1">
+              {(trackInfo.lengthM / 1000).toFixed(2)} KM · MAP <PixelMap size={12} />
+            </span>
           </div>
         </div>
       </header>
@@ -195,7 +187,17 @@ export function MainMenu() {
       {/* Weather Indicator */}
       {(s.weather === 'rain' || s.weather === 'snow') && (
         <div className="dirt-weather-pill" aria-live="polite">
-          <span>{s.weather === 'rain' ? '🌧️ Wet Weather Active' : '❄️ Snow Conditions Active'}</span>
+          <span className="flex items-center gap-1.5">
+            {s.weather === 'rain' ? (
+              <>
+                <PixelRain size={14} /> Wet Weather Active
+              </>
+            ) : (
+              <>
+                <PixelSnow size={14} /> Snow Conditions Active
+              </>
+            )}
+          </span>
         </div>
       )}
 
@@ -231,26 +233,24 @@ export function MainMenu() {
         <aside className="dirt-drawer" aria-label="Section Details">
           <div className="dirt-drawer-head">
             <h2 className="dirt-drawer-title">
-              {activeNav === 'career' && 'GRAND PRIX'}
               {activeNav === 'online' && 'MULTIPLAYER'}
-              {activeNav === 'arcade' && 'ARCADE SPRINT'}
+              {activeNav === 'arcade' && 'RACE SETUP'}
               {activeNav === 'timetrial' && 'TIME TRIAL'}
               {activeNav === 'practice' && 'FREE PRACTICE'}
               {activeNav === 'garage' && 'GARAGE TUNING'}
               {activeNav === 'profile' && 'DRIVER PROFILE'}
               {activeNav === 'options' && 'OPTIONS & CONTROLS'}
-              {activeNav === 'crew' && 'CREW DIRECTORY'}
               <span className="dirt-drawer-badge">
                 {activeNav === 'garage' ? '3D' : activeNav === 'profile' ? 'STATS' : 'READY'}
               </span>
             </h2>
             <button
               type="button"
-              className="dirt-drawer-close"
+              className="dirt-drawer-close flex items-center gap-1.5"
               onClick={() => setDrawerOpen(false)}
               title="Close Drawer"
             >
-              ✕ HIDE
+              <PixelCross size={10} /> HIDE
             </button>
           </div>
 
@@ -298,7 +298,7 @@ export function MainMenu() {
                   </Field>
                 )}
 
-                {(activeNav === 'career' || activeNav === 'arcade') && (
+                {activeNav === 'arcade' && (
                   <>
                     <Field label="Laps" value={String(s.totalLaps)}>
                       <Slider label="Laps" min={1} max={20} step={1} value={s.totalLaps} onChange={(v) => set({ totalLaps: v })} />
@@ -504,32 +504,6 @@ export function MainMenu() {
               </>
             )}
 
-            {/* Crew Tab */}
-            {activeNav === 'crew' && (
-              <div className="l-team-section">
-                <div className="l-wip-badge">
-                  <span className="l-wip-tag">CREW</span>
-                  <span className="l-wip-desc">Arigatoo Club Racing Collective</span>
-                </div>
-                <div className="l-team-grid">
-                  {[
-                    { name: 'Nirav', code: 'NIR' },
-                    { name: 'Joy', code: 'JOY' },
-                    { name: 'Ady', code: 'ADY' },
-                    { name: 'Disha', code: 'DIS' },
-                  ].map((member) => (
-                    <div key={member.name} className="l-team-card">
-                      <span className="l-team-dot" />
-                      <div className="l-team-info">
-                        <span className="l-team-name">{member.name}</span>
-                        <span className="l-team-code">{member.code}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Online Tab */}
             {activeNav === 'online' && (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
@@ -582,13 +556,13 @@ export function MainMenu() {
             </div>
             <button
               type="button"
-              className="dirt-hero-change-btn"
+              className="dirt-hero-change-btn flex items-center gap-1.5"
               onClick={(e) => {
                 e.stopPropagation();
                 setTrackModalOpen(true);
               }}
             >
-              CHANGE MAP 🗺️
+              CHANGE MAP <PixelMap size={12} />
             </button>
           </div>
 
@@ -634,19 +608,16 @@ export function MainMenu() {
 
         <div className="dirt-prompts">
           <span className="dirt-prompt" onClick={() => setTrackModalOpen(true)} style={{ cursor: 'pointer' }}>
-            <span className="dirt-btn-icon a">A</span> SELECT
-          </span>
-          <span className="dirt-prompt" onClick={() => setTrackModalOpen(true)} style={{ cursor: 'pointer' }}>
-            <span className="dirt-btn-icon x">X</span> RACE
+            <span className="dirt-btn-key">SPACE</span> START RACE
           </span>
           <span className="dirt-prompt" onClick={() => selectNav('garage')} style={{ cursor: 'pointer' }}>
-            <span className="dirt-btn-icon y">Y</span> GARAGE
-          </span>
-          <span className="dirt-prompt" onClick={() => setTrackModalOpen(true)} style={{ cursor: 'pointer' }}>
-            <span className="dirt-btn-key">SPACE</span> QUICK START
+            <span className="dirt-btn-key">G</span> GARAGE
           </span>
           <span className="dirt-prompt">
             <span className="dirt-btn-key">C</span> ORBIT CAM
+          </span>
+          <span className="dirt-prompt">
+            <span className="dirt-btn-key">DRAG</span> ROTATE 3D
           </span>
         </div>
       </footer>
