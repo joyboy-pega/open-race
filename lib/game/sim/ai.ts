@@ -248,9 +248,11 @@ export function driveAI(car: WorldCar, ctx: AIContext, dt: number): void {
     if (o === car || !!o.pit !== !!car.pit) continue;
     const ds = arcDelta(myS, o.timing.lastS);
     const dl = o.lateral - planned;
-    // Compare current and intended lines: cars on converging paths count as being in the way
+    // Current lateral offset and target-lane lateral offset
     const oPlan = o.ai ? RL.offset[o.phys.idx] + o.ai.shift : o.lateral;
-    const overlap = Math.min(Math.abs(dl), Math.abs(o.lateral - car.lateral), Math.abs(oPlan - planned), Math.abs(oPlan - car.lateral));
+    const curLatDiff = Math.abs(o.lateral - car.lateral);
+    const targetLatDiff = Math.abs(dl);
+    const overlap = Math.min(curLatDiff, targetLatDiff, Math.abs(oPlan - car.lateral));
     const scanDist = isSC ? 3500 : 700;
     const overlapMax = (t < 35 || Math.abs(RL.curv[idx]) > 0.0020) ? 36 : 22;
     if (ds > 0 && ds < scanDist && ds < aheadGap && (isSC || overlap < overlapMax)) {
@@ -330,8 +332,8 @@ export function driveAI(car: WorldCar, ctx: AIContext, dt: number): void {
     }
   }
 
-  // defending: cover the attacker's side once, then go back to the line
-  if (ctx.isRace && brain.passSide === 0 && attacker && aggression > 0.5 && t > brain.defendCooldown && curvHere < 0.003) {
+  // defending: cover the attacker's side once, then go back to the line (never on start straight t < 8)
+  if (ctx.isRace && t > 8 && brain.passSide === 0 && attacker && aggression > 0.5 && t > brain.defendCooldown && curvHere < 0.003) {
     const closing = attacker.phys.vf > v - 4;
     if (closing && attackerGap > -150 && Math.abs(attacker.lateral - car.lateral) > 5 && Math.abs(attacker.lateral) < MAX_LAT) {
       brain.defendUntil = t + 1.0;
@@ -418,7 +420,8 @@ export function driveAI(car: WorldCar, ctx: AIContext, dt: number): void {
     // brake lag eats distance: charge it against the room before computing a stopping speed
     const room = Math.max(0, aheadGap - gmin - 0.3 * Math.max(0, v - av));
     const followCap = av + Math.sqrt(2 * 700 * room);
-    target = Math.min(target, aheadGap < gmin ? av * 0.93 : followCap);
+    const closeCap = t < 5 && v < 220 ? Math.max(av * 0.98, v * 0.95) : av * 0.93;
+    target = Math.min(target, aheadGap < gmin ? closeCap : followCap);
   }
   // side by side into a corner: the car on the outside gives way to the inside one
   const inOrNearCorner = Math.abs(RL.curv[idx]) > 0.0020 || (nc.dist > 0 && nc.dist < 26);
