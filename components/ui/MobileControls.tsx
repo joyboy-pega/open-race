@@ -86,6 +86,7 @@ export function MobileControls() {
         <div className="mc-steer-row">
           <button
             type="button"
+            data-sound="none"
             {...bindControl('steerLeft')}
             className={`mc-btn mc-steer ${activeControls['steerLeft'] ? 'on' : ''}`}
             aria-label="Steer Left"
@@ -95,6 +96,7 @@ export function MobileControls() {
           </button>
           <button
             type="button"
+            data-sound="none"
             {...bindControl('steerRight')}
             className={`mc-btn mc-steer ${activeControls['steerRight'] ? 'on' : ''}`}
             aria-label="Steer Right"
@@ -139,6 +141,7 @@ export function MobileControls() {
         <div className="mc-pedals">
           <button
             type="button"
+            data-sound="none"
             {...bindControl('brake')}
             className={`mc-btn mc-brake ${activeControls['brake'] ? 'on' : ''}`}
             aria-label="Brake or Reverse"
@@ -148,6 +151,7 @@ export function MobileControls() {
           </button>
           <button
             type="button"
+            data-sound="none"
             {...bindControl('throttle')}
             className={`mc-btn mc-gas ${activeControls['throttle'] ? 'on' : ''}`}
             aria-label="Throttle Accelerate"
