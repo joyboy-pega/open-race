@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useId, useRef } from 'react';
+import { playUiSwitch, playUiSlider } from '@/lib/game/audio/uiSound';
 
 /* Small accessible form primitives shared by the lobby and the pause menu. */
 
@@ -34,6 +35,7 @@ export function Seg<T extends string | number>({
     if (next < 0) return;
     e.preventDefault();
     e.stopPropagation();
+    playUiSwitch();
     onChange(options[next].value);
     refs.current[next]?.focus();
   };
@@ -99,8 +101,14 @@ export function Slider({
       step={step}
       value={value}
       style={{ ['--fill' as string]: fill }}
-      onChange={(e) => onChange(parseFloat(e.target.value))}
-      onInput={(e) => onChange(parseFloat((e.target as HTMLInputElement).value))}
+      onChange={(e) => {
+        playUiSlider();
+        onChange(parseFloat(e.target.value));
+      }}
+      onInput={(e) => {
+        playUiSlider();
+        onChange(parseFloat((e.target as HTMLInputElement).value));
+      }}
     />
   );
 }
