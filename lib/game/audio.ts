@@ -45,6 +45,10 @@ export class AudioManager {
   private prevSparks = 0;
   private wallCooldown = 0;
   private pitTimer = 0;
+  private prevOnTrack = true;
+  private offTrackCooldown = 0;
+  private prevGear: number | string = 1;
+  private popCooldown = 0;
   private lastFrameRef: AudioFrame = createAudioFrame(0);
 
   get ready() {
@@ -164,6 +168,10 @@ export class AudioManager {
       this._player?.reset();
       this._ai?.reset();
       this.prevSparks = 0;
+      this.prevOnTrack = true;
+      this.offTrackCooldown = 0;
+      this.prevGear = 1;
+      this.popCooldown = 0;
     }
     this.applyMix();
   }
@@ -175,6 +183,10 @@ export class AudioManager {
     if (!this._player || !this._surface || !this._ai || !this._ambience || !this._sfx) return;
 
     if (f.paused !== this.paused || f.results !== this.results) {
+      if (f.paused !== this.paused) {
+        if (f.paused) this._sfx.uiPause();
+        else this._sfx.uiResume();
+      }
       this.paused = f.paused;
       this.results = f.results;
       this.applyMix();
@@ -204,6 +216,35 @@ export class AudioManager {
       this.wallCooldown = 0.35;
     }
     this.prevSparks = p.sparks;
+
+    // Off-track entry / return edge detection
+    this.offTrackCooldown -= dt;
+    if (p.onTrack !== this.prevOnTrack) {
+      if (!p.onTrack && this.prevOnTrack && p.kmh > 20 && !f.paused && this.offTrackCooldown <= 0) {
+        this._sfx.offTrackBreach(clamp01(p.kmh / 180));
+        this.offTrackCooldown = 0.35;
+      } else if (p.onTrack && !this.prevOnTrack && p.kmh > 20 && !f.paused && this.offTrackCooldown <= 0) {
+        this._sfx.onTrackReturn(clamp01(p.kmh / 180));
+        this.offTrackCooldown = 0.25;
+      }
+      this.prevOnTrack = p.onTrack;
+    }
+
+    // Gear shift
+    if (p.gear !== this.prevGear && !f.paused && p.kmh > 15) {
+      const gearNum = (g: number | string) => (typeof g === 'number' ? g : g === 'R' ? -1 : 0);
+      this._sfx.gearShift(gearNum(p.gear) > gearNum(this.prevGear));
+      this.prevGear = p.gear;
+    }
+
+    // Exhaust pop on rev limiter bounce or overrun
+    this.popCooldown -= dt;
+    if (this.popCooldown <= 0 && !f.paused) {
+      if (p.rpm > 14600 && p.throttle > 0.8) {
+        this._sfx.exhaustPop(0.18);
+        this.popCooldown = 0.12 + Math.random() * 0.1;
+      }
+    }
 
     // Pit limiter beeps.
     if (p.inPit && !f.paused && !f.results) {
@@ -239,6 +280,44 @@ export class AudioManager {
 
   public isEnabled(): boolean {
     return this.enabled;
+  }
+
+  // --- UI sounds (safe to call anywhere from user gesture) ---
+
+  public playUiClick() {
+    if (!this.enabled) return;
+    if (!this.ready) this.init();
+    this._sfx?.uiClick();
+  }
+
+  public playUiNav() {
+    if (!this.enabled) return;
+    if (!this.ready) this.init();
+    this._sfx?.uiNav();
+  }
+
+  public playUiSwitch() {
+    if (!this.enabled) return;
+    if (!this.ready) this.init();
+    this._sfx?.uiSwitch();
+  }
+
+  public playUiSlider() {
+    if (!this.enabled) return;
+    if (!this.ready) this.init();
+    this._sfx?.uiSlider();
+  }
+
+  public playUiConfirm() {
+    if (!this.enabled) return;
+    if (!this.ready) this.init();
+    this._sfx?.uiConfirm();
+  }
+
+  public playUiBack() {
+    if (!this.enabled) return;
+    if (!this.ready) this.init();
+    this._sfx?.uiBack();
   }
 
   // --- legacy API (kept so older call sites keep compiling; AudioBridge owns the wiring now) ---
