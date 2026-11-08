@@ -48,7 +48,33 @@ export function playSimEvent(a: AudioManager, e: SimEvent, playerId: number) {
       }
       break;
     case 'trackLimits':
-      if (isMe(e.carId)) sfx.radioBlip();
+      if (isMe(e.carId)) {
+        sfx.radioBlip();
+        sfx.trackLimitsAlert();
+      }
+      break;
+    case 'chicaneCut':
+      if (isMe(e.carId)) {
+        sfx.chicaneCutTone();
+      }
+      break;
+    case 'lapInvalid':
+      if (isMe(e.carId)) {
+        sfx.lapInvalidTone();
+      }
+      break;
+    case 'ers':
+      if (isMe(e.carId)) {
+        sfx.ersDeploy(e.active);
+      }
+      break;
+    case 'flag':
+      sfx.flagAlert(e.flag);
+      break;
+    case 'pitQTE':
+      if (isMe(e.carId)) {
+        sfx.pitQTE(e.result);
+      }
       break;
     case 'pitEnter':
       if (isMe(e.carId)) sfx.radioBlip();
