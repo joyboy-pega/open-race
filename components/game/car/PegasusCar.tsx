@@ -321,23 +321,32 @@ export function PegasusCar({ car, interpolate = false }: PegasusCarProps) {
     }
 
     const T = track.current;
-    const idx = p.idx ?? 0;
-    const dx = posX - T.px[idx];
-    const dz = posY - T.py[idx];
-    const lat = dx * T.nx[idx] + dz * T.ny[idx];
-    const f = surfaceIndex(idx, posX, posY);
-    const carY = surfaceHeight(f, lat) + 0.05;
+    let carY = 0.05;
+    let roadPitch = 0;
+    let roadBank = 0;
+    let cosH = 1;
+    let sinH = 0;
+
+    const isShowroom = !interpolate && posX === 0 && posY === 0;
+
+    if (T && T.px && !isShowroom) {
+      const idx = p.idx ?? 0;
+      const dx = posX - T.px[idx];
+      const dz = posY - T.py[idx];
+      const lat = dx * T.nx[idx] + dz * T.ny[idx];
+      const f = surfaceIndex(idx, posX, posY);
+      carY = surfaceHeight(f, lat) + 0.05;
+
+      roadPitch = surfaceGradeAngle(f);
+      roadBank = surfaceCamberAngle(f);
+      const trackYaw = Math.atan2(T.ty[idx], T.tx[idx]);
+      const headingDiff = posA - trackYaw;
+      cosH = Math.cos(headingDiff);
+      sinH = Math.sin(headingDiff);
+    }
 
     g.position.set(posX, carY, posY);
     g.rotation.y = Math.PI / 2 - posA;
-
-    // Attitude + road grade/camber + engine vibration
-    const roadPitch = surfaceGradeAngle(f);
-    const roadBank = surfaceCamberAngle(f);
-    const trackYaw = Math.atan2(T.ty[idx], T.tx[idx]);
-    const headingDiff = posA - trackYaw;
-    const cosH = Math.cos(headingDiff);
-    const sinH = Math.sin(headingDiff);
 
     const speedN = Math.min(1, Math.abs(p.vf) / 900);
     const engineBuzz = Math.sin(a.t * 48) * 0.0006 * (1 + Math.abs(p.vf) * 0.002);
