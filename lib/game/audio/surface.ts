@@ -180,8 +180,8 @@ export class SurfaceLayers {
     const moving = clamp01(f.kmh / 50);
     this.gravelLfo.frequency.setTargetAtTime(10 + speedN * 26, now, 0.1);
     this.gravelBp.frequency.setTargetAtTime(1800 + speedN * 1400, now, 0.1);
-    this.gravelGain.gain.setTargetAtTime(kind === 'gravel' ? 0.3 * moving : 0, now, 0.08);
-    this.grassGain.gain.setTargetAtTime(kind === 'grass' ? 0.5 * moving * (0.4 + 0.6 * speedN) : 0, now, 0.1);
+    this.gravelGain.gain.setTargetAtTime(kind === 'gravel' ? (0.45 + 0.25 * speedN) * moving : 0, now, 0.06);
+    this.grassGain.gain.setTargetAtTime(kind === 'grass' ? 0.65 * moving * (0.4 + 0.6 * speedN) : 0, now, 0.08);
     this.offAmount = kind === 'track' ? 0 : moving;
 
     // Wind: speed^2 so it only really arrives at high speed; less in the cockpit.
