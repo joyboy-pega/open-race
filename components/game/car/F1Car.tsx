@@ -118,7 +118,9 @@ function CarRig({ car, roadster, interpolate }: CarRigProps) {
     let cosH = 1;
     let sinH = 0;
 
-    if (T && T.px) {
+    const isShowroom = !interpolate && scratchPose.x === 0 && scratchPose.y === 0;
+
+    if (T && T.px && !isShowroom) {
       const idx = p.idx ?? 0;
       const dx = scratchPose.x - T.px[idx];
       const dz = scratchPose.y - T.py[idx];
