@@ -8,6 +8,7 @@ import type { Difficulty, GameMode, Livery, TimeOfDay, TyreCompound, WeatherType
 import { MAX_AI_CARS } from '@/lib/game/constants';
 import { DEFAULT_SETTINGS, formatLapTime, type GameSettings } from '@/lib/game/gameState';
 import { recordKey, useGameStore } from '@/lib/game/store';
+import { playUiNav, playUiConfirm, playUiBack } from '@/lib/game/audio/uiSound';
 import { ControlsPanel } from './ControlsPanel';
 import { SettingsPanel } from './SettingsPanel';
 import { MultiplayerLobby } from './MultiplayerLobby';
@@ -103,6 +104,7 @@ export function MainMenu() {
   }, [trackModalOpen, drawerOpen]);
 
   const selectNav = (nav: MainMenuSection) => {
+    playUiNav();
     setActiveNav(nav);
     if (nav === 'arcade') {
       set({ mode: 'race', totalLaps: 3, drivingModel: 'casual' });
@@ -129,6 +131,7 @@ export function MainMenu() {
 
   const handleStartRace = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
+    playUiConfirm();
     router.push('/game');
   };
 
