@@ -14,6 +14,7 @@ import {
 } from '../gameState';
 import { createInitialCarState, findNearestTrackPoint, updateCarPhysics, type PhysicsExtras } from '../physics';
 import { createBrain, driveAI } from './ai';
+import { getRacingLine } from './racingLine';
 import { applyAssists } from './assists';
 import { CollisionSystem } from './collisions';
 import { FlagsManager } from './flags';
@@ -305,6 +306,10 @@ export class GameWorld {
         car.driver = { name: d.name, code: d.code, team: d.team, livery: d.livery };
         car.skill = d.skill;
         car.ai = createBrain(slot, Math.floor(this.rand() * 4294967296));
+        if (race) {
+          const rl = getRacingLine();
+          car.ai.shift = lateral - rl.offset[idx];
+        }
       }
       car.position = slot + 1;
       cars.push(car);
