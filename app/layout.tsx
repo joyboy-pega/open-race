@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { PwaRegister } from '@/components/PwaRegister';
+import { UiAudioBridge } from '@/components/ui/UiAudioBridge';
 import './globals.css';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://openrace.club';
@@ -160,6 +161,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <UiAudioBridge />
         <PwaRegister />
       </body>
     </html>
