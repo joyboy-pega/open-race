@@ -30,7 +30,7 @@ export function Cars() {
       {playerCar && <F1Car key={`${world.raceId}-${playerCar.id}`} car={playerCar} interpolate />}
 
       {/* AI cars: instanced rendering (G6: <= 40 draw calls for 20 cars) */}
-      {aiF1Cars.length > 0 && <InstancedAICars cars={aiF1Cars} />}
+      {aiF1Cars.length > 0 && <InstancedAICars key={`${world.raceId}-ai-${aiF1Cars.length}`} cars={aiF1Cars} />}
 
       {/* Pegasus AI cars */}
       {aiPegasusCars.map((car) => (
