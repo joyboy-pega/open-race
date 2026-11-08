@@ -88,17 +88,22 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
   // wash out the rotor/nut/flange with whatever livery.rim happens to be.
   useEffect(() => {
     const bodyMesh = bodyRef.current;
+    const flapMesh = flapRef.current;
     if (!bodyMesh) return;
 
     for (let i = 0; i < count; i++) {
       _color.set(cars[i].driver.livery.body);
       bodyMesh.setColorAt(i, _color);
-      flapRef.current?.setColorAt(i, _color.set(cars[i].driver.livery.accent));
+      if (flapMesh) {
+        _color.set(cars[i].driver.livery.accent);
+        flapMesh.setColorAt(i, _color);
+      }
     }
 
     if (bodyMesh.instanceColor) bodyMesh.instanceColor.needsUpdate = true;
-    if (flapRef.current?.instanceColor) flapRef.current.instanceColor.needsUpdate = true;
-  }, [cars, count]);
+    if (flapMesh?.instanceColor) flapMesh.instanceColor.needsUpdate = true;
+    bodyMat.needsUpdate = true;
+  }, [cars, count, bodyMat]);
 
   // Per-frame matrix update loop: strictly zero allocations (Rule R7)
   useFrame((_, dt) => {
@@ -109,6 +114,19 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
     const lightMesh = brakeLightRef.current;
     const flapMesh = flapRef.current;
     if (!bodyMesh || !carbonMesh || !tyresMesh || !rimsMesh || !lightMesh || !flapMesh) return;
+
+    // Guard: guarantee instance colors are populated on frame 0
+    if (!bodyMesh.instanceColor) {
+      for (let i = 0; i < count; i++) {
+        _color.set(cars[i].driver.livery.body);
+        bodyMesh.setColorAt(i, _color);
+        _color.set(cars[i].driver.livery.accent);
+        flapMesh.setColorAt(i, _color);
+      }
+      const ic = bodyMesh.instanceColor as THREE.BufferAttribute | null;
+      if (ic) ic.needsUpdate = true;
+      if (flapMesh.instanceColor) flapMesh.instanceColor.needsUpdate = true;
+    }
     const drsLerp = Math.min(1, dt * 16);
 
     const T = track.current;
@@ -203,6 +221,7 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
         args={[f1.body, bodyMat, count]}
         castShadow
         receiveShadow
+        frustumCulled={false}
       />
 
       {/* 2. Exposed carbon fibre aerodynamic elements (1 draw call) */}
@@ -211,6 +230,7 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
         args={[f1.carbon, shared.carbon, count]}
         castShadow
         receiveShadow
+        frustumCulled={false}
       />
 
       {/* 3. Tyres (4 per car, 1 draw call) */}
@@ -218,21 +238,29 @@ export function InstancedAICars({ cars }: { cars: WorldCar[] }) {
         ref={tyresRef}
         args={[tyreGeo, shared.tyre, wheelCount]}
         castShadow
+        frustumCulled={false}
       />
 
       {/* 4. Rims with per-instance rim colors (4 per car, 1 draw call) */}
       <instancedMesh
         ref={rimsRef}
         args={[rimGeo, rimMat, wheelCount]}
+        frustumCulled={false}
       />
 
       {/* 5. Active-aero rear flap, accent-tinted per car (1 draw call) */}
-      <instancedMesh ref={flapRef} args={[f1.flap, bodyMat, count]} castShadow />
+      <instancedMesh
+        ref={flapRef}
+        args={[f1.flap, bodyMat, count]}
+        castShadow
+        frustumCulled={false}
+      />
 
       {/* 6. FIA safety rear rain light (1 draw call) */}
       <instancedMesh
         ref={brakeLightRef}
         args={[f1.brakeLight, brakeLightMat, count]}
+        frustumCulled={false}
       />
     </group>
   );
