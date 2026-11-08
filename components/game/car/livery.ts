@@ -170,7 +170,8 @@ function drawPatches(ctx: CanvasRenderingContext2D, l: Livery) {
   });
 }
 
-export function paintLivery(l: Livery): HTMLCanvasElement {
+export function paintLivery(l: Livery): HTMLCanvasElement | null {
+  if (typeof document === 'undefined') return null;
   const canvas = document.createElement('canvas');
   canvas.width = ATLAS_W;
   canvas.height = ATLAS_H;
@@ -195,7 +196,9 @@ export function getLiveryMaterial(l: Livery): THREE.MeshPhysicalMaterial {
   const key = liveryKey(l);
   const hit = materialCache.get(key);
   if (hit) return hit;
-  const tex = new THREE.CanvasTexture(paintLivery(l));
+  if (typeof document === 'undefined') return new THREE.MeshPhysicalMaterial();
+  const canvas = paintLivery(l);
+  const tex = canvas ? new THREE.CanvasTexture(canvas) : new THREE.Texture();
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   tex.wrapS = THREE.ClampToEdgeWrapping;
