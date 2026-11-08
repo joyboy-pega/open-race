@@ -26,11 +26,18 @@ export function WreckfestLeaderboard() {
       selected = order.slice(0, 4);
     } else {
       const p1 = order[0];
-      const ahead = order[playerIdx - 1];
-      const player = order[playerIdx];
-      const behind = playerIdx + 1 < order.length ? order[playerIdx + 1] : order[playerIdx - 2];
-
-      selected = [p1, ahead, player, behind].filter(Boolean);
+      if (playerIdx === order.length - 1) {
+        // Player is last: show Leader, P-2, P-1, Player in ascending rank
+        const twoAhead = playerIdx >= 2 ? order[playerIdx - 2] : null;
+        const oneAhead = order[playerIdx - 1];
+        const player = order[playerIdx];
+        selected = [p1, twoAhead, oneAhead, player].filter(Boolean) as typeof order;
+      } else {
+        const ahead = order[playerIdx - 1];
+        const player = order[playerIdx];
+        const behind = order[playerIdx + 1];
+        selected = [p1, ahead, player, behind].filter(Boolean);
+      }
     }
 
     return selected;
