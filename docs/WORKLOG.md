@@ -1569,3 +1569,40 @@ complaints on lower quality tiers, out of scope for this pass.
 - `npm run typecheck` clean (0 errors).
 - `npm test` passed: 39 test files, 275/275 tests passed.
 - Average simulation step cost reduced to ~0.008 ms, solid 60 FPS verified via headless playtest.
+
+---
+
+## 2026-11-08 — Procedural SFX & AI #9 Grid Launch + Vehicle Rendering Fix (branch `main`)
+
+**Context:** User requested procedural sound effects across the game, fix for vehicle rendering intermittency, and fix for AI #9.
+
+**Files:**
+- `lib/game/audio/sfx.ts`, `lib/game/audio/uiSound.ts`, `lib/game/audio/uiSound.test.ts`, `components/ui/UiAudioBridge.tsx`, `components/ui/kit.tsx`, `components/ui/MainMenu.tsx`, `components/ui/MobileControls.tsx`, `lib/game/audio/surface.ts`, `lib/game/audio/events.ts`, `lib/game/audio.ts`, `app/layout.tsx`.
+- `components/game/car/InstancedAICars.tsx`, `components/game/car/F1Car.tsx`, `components/game/car/PegasusCar.tsx`, `components/game/Cars.tsx`, `components/game/car/livery.ts`.
+- `components/ui/hud/WreckfestLeaderboard.tsx`, `lib/game/sim/ai.ts`, `lib/game/sim/world.ts`, `lib/game/sim/golden.test.ts`.
+
+**Changes:**
+1. **Procedural WebAudio SFX Suite:**
+   - Implemented UI interaction sounds (`uiClick`, `uiNav`, `uiSwitch`, `uiSlider`, `uiConfirm`, `uiBack`, `uiPause`, `uiResume`).
+   - Implemented racing alerts and dynamics (`offTrackBreach`, `onTrackReturn`, `trackLimitsAlert`, `chicaneCutTone`, `lapInvalidTone`, `gearShift`, `exhaustPop`, `ersDeploy`, `flagAlert`, `pitQTE`).
+   - Global event delegation via `UiAudioBridge` with SSR-safe checks.
+2. **Vehicle Rendering Fix:**
+   - Three.js Frustum Culling on Instanced Mesh: Set `frustumCulled={false}` on all 6 instanced meshes in `InstancedAICars.tsx` to prevent camera movements from culling the entire AI field when origin leaves frustum.
+   - Guaranteed frame 0 instance color buffer population.
+   - Showroom track elevation guard in `F1Car.tsx` and `PegasusCar.tsx`.
+   - SSR guards added to `livery.ts` canvas texture creation.
+3. **AI Grid Launch & AI #9 Fix:**
+   - Initialized `car.ai.shift = lateral - rl.offset[idx]` in `world.ts` at race start, eliminating cross-track error spike at 0 km/h where AI steered 100% full lock sideways off the grid.
+   - AI cars now launch cleanly at 100% throttle in their starting lane and smoothly merge toward the racing line over 2-3 seconds.
+   - Fixed `overlap` calculation in `ai.ts` by removing `Math.abs(oPlan - planned)` which falsely caused cars in opposite lanes to be treated as overlapping.
+   - Guarded defensive swerving with `t > 8` to prevent violent blocking on the start straight.
+   - Added launch gap speed retention (`closeCap`) so cars don't brake check off the line.
+   - Fixed Wreckfest HUD leaderboard row ordering when player is in last place (P1, P-2, P-1, Player).
+4. **Golden Hash Update (Rule R5):**
+   - Golden race determinism verified with identical digests across repeated runs.
+   - Old golden hash: `'14e993b6'`
+   - New golden hash: `'5a0cf69f'` (AI cars now launch with full throttle and clean lines instead of bogging down).
+
+**Verification:**
+- `npm run typecheck` clean (0 errors).
+- `npm test`: 41/41 test files passed, 278/278 tests passed.
