@@ -57,6 +57,10 @@ export function updateDrsAvailability(cars: WorldCar[], ctx: DrsContext) {
     }
 
     if (!ctx.isRace) {
+      if (track.current.meta.isOpenMap || track.current.meta.id === 'open') {
+        car.drsAvailable = true;
+        continue;
+      }
       let any = false;
       for (const z of DRS_ZONES) if (inRange(idx, z.detectIdx, z.zone.end)) any = true;
       car.drsAvailable = any;

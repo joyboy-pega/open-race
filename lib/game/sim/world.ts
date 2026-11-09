@@ -162,7 +162,11 @@ export class GameWorld {
   }
 
   get isRace() {
-    return this.settings.mode === 'race' || this.settings.mode === 'multiplayer';
+    return (this.settings.mode === 'race' || this.settings.mode === 'multiplayer') && !this.isFreeRoam;
+  }
+
+  get isFreeRoam() {
+    return this.settings.mode === 'freeroam' || this.settings.trackId === 'open';
   }
 
   get isMultiplayer() {
@@ -221,6 +225,8 @@ export class GameWorld {
         : null;
 
     const aiCount = mpPlayers
+      ? 0
+      : this.isFreeRoam
       ? 0
       : isMultiCar
       ? Math.max(0, Math.min(MAX_AI_CARS, settings.aiCount))
@@ -509,7 +515,7 @@ export class GameWorld {
     const lctx = this.limitsCtx;
     lctx.raceTime = this.raceTime;
     lctx.dt = dt;
-    lctx.enabled = true;
+    lctx.enabled = this.isRace;
     for (const car of this.cars) updateTrackLimits(car, lctx);
 
     this.updateOrder(dt);
