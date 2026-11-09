@@ -24,6 +24,12 @@ const TRACK_DETAILS: Record<
     highlight: string;
   }
 > = {
+  open: {
+    flag: 'FREE',
+    tagline: 'Open World Free Roam · Infinite Freedom',
+    turns: 6,
+    highlight: 'Drive wherever and whatever you want with no walls or limits',
+  },
   buddh: {
     flag: 'IND',
     tagline: 'F1 Indian Grand Prix · High Elevation & Sweeping Hairpins',
@@ -98,7 +104,11 @@ export function TrackSelectModal({
 
   const handleSelectTrack = (id: string) => {
     setSelectedTrackId(id);
-    setSettings({ trackId: id });
+    const isOpen = id === 'open';
+    setSettings({
+      trackId: id,
+      ...(isOpen ? { mode: 'freeroam', aiCount: 0 } : {}),
+    });
   };
 
   const handleDoubleCardClick = (id: string) => {

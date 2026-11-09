@@ -22,6 +22,18 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 /** Build the world from current settings, then bump the session so the scene remounts against it. */
 export async function startSession() {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const trackParam = params.get('track');
+    const modeParam = params.get('mode');
+    if (trackParam || modeParam) {
+      useGameStore.getState().setSettings({
+        ...(trackParam ? { trackId: trackParam } : {}),
+        ...(modeParam ? { mode: modeParam as any } : {}),
+        ...(trackParam === 'open' || modeParam === 'freeroam' ? { aiCount: 0 } : {}),
+      });
+    }
+  }
   const storeSettings = useGameStore.getState().settings;
   if (storeSettings.mode === 'multiplayer' && multiplayerRoom.players.length > 0) {
     useGameStore.getState().setSettings({

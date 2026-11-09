@@ -26,10 +26,11 @@ const Showroom = dynamic(() => import('./Showroom'), {
   loading: () => <div className="l-showroom-loading">WARMING UP GARAGE…</div>,
 });
 
-type MainMenuSection = 'arcade' | 'timetrial' | 'practice' | 'online' | 'garage' | 'profile' | 'options';
+type MainMenuSection = 'arcade' | 'freeroam' | 'timetrial' | 'practice' | 'online' | 'garage' | 'profile' | 'options';
 
 const MENU_ITEMS = [
   { id: 'arcade', label: 'RACE', sub: 'SPRINT VS AI' },
+  { id: 'freeroam', label: 'OPEN FREE MODE', sub: 'DRIVE ANYWHERE' },
   { id: 'timetrial', label: 'TIME TRIAL', sub: 'HOT LAP' },
   { id: 'practice', label: 'PRACTICE', sub: 'FREE RUN' },
   { id: 'online', label: 'ONLINE', sub: 'P2P ROOM' },
@@ -110,6 +111,12 @@ export function MainMenu() {
       set({ mode: 'race', totalLaps: 3, drivingModel: 'casual' });
       setDrawerOpen(false);
       setTrackModalOpen(true);
+    } else if (nav === 'freeroam') {
+      set({ mode: 'freeroam', trackId: 'open', aiCount: 0, drivingModel: 'casual' });
+      setDrawerOpen(false);
+      setTrackModalOpen(false);
+      playUiConfirm();
+      router.push('/game');
     } else if (nav === 'timetrial') {
       set({ mode: 'timetrial' });
       setDrawerOpen(false);
@@ -135,7 +142,7 @@ export function MainMenu() {
     router.push('/game');
   };
 
-  const isRaceMode = activeNav === 'arcade' || activeNav === 'timetrial' || activeNav === 'practice';
+  const isRaceMode = activeNav === 'arcade' || activeNav === 'timetrial' || activeNav === 'practice' || activeNav === 'freeroam';
 
   return (
     <main className="dirt-root" aria-label="Open Race main menu">
