@@ -10,10 +10,11 @@ export function WreckfestLeaderboard() {
   const position = useGameStore((s) => s.hud.position || 1);
   const carCount = useGameStore((s) => s.hud.carCount || 20);
   const order = useGameStore((s) => s.hud.order || EMPTY_ROWS);
+  const isFreeRoam = useGameStore((s) => s.settings.mode === 'freeroam' || s.settings.trackId === 'open');
 
   // Compute the 4 relevant drivers: P1 (Leader), P - 1, P (Player), P + 1
   const rows = React.useMemo(() => {
-    if (order.length === 0) return EMPTY_ROWS;
+    if (isFreeRoam || order.length === 0) return EMPTY_ROWS;
 
     const pIdx = order.findIndex((r) => r.isPlayer);
     const playerIdx = pIdx >= 0 ? pIdx : 0;
@@ -41,7 +42,25 @@ export function WreckfestLeaderboard() {
     }
 
     return selected;
-  }, [order]);
+  }, [order, isFreeRoam]);
+
+  if (isFreeRoam) {
+    return (
+      <div className="absolute top-4 left-[144px] md:left-[150px] z-20 flex flex-col items-start select-none pointer-events-none font-sans">
+        <span className="text-[10px] font-mono font-bold tracking-widest text-[#c8ff2e] uppercase leading-tight drop-shadow">
+          MAP
+        </span>
+        <div className="flex items-baseline leading-none mt-0.5">
+          <span className="font-display font-black text-3xl md:text-4xl italic text-white tracking-tighter drop-shadow-lg">
+            OPEN WORLD
+          </span>
+        </div>
+        <div className="mt-1 px-2 py-0.5 bg-black/60 border border-white/10 text-[10px] font-mono font-bold tracking-wider text-white/80 uppercase">
+          FREE ROAM MODE
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute top-4 left-[144px] md:left-[150px] z-20 flex flex-col items-start select-none pointer-events-none font-sans">

@@ -30,6 +30,7 @@ export function WreckfestLapTimer() {
   const lap = useGameStore((s) => s.hud.lap || 1);
   const totalLaps = useGameStore((s) => s.settings.totalLaps || 4);
   const bestLap = useGameStore((s) => s.hud.bestLap);
+  const isFreeRoam = useGameStore((s) => s.settings.mode === 'freeroam' || s.settings.trackId === 'open');
 
   useTicker(() => {
     const t = world.player?.timing;
@@ -47,19 +48,32 @@ export function WreckfestLapTimer() {
     <div className="absolute top-4 right-[148px] md:right-[154px] z-20 flex flex-col items-end select-none pointer-events-none font-sans">
       {/* Top Header Row with Pause Button */}
       <div className="flex items-center gap-2.5">
-        <div className="flex flex-col items-end leading-none">
-          <span className="text-[10px] font-mono font-bold tracking-widest text-white/75 uppercase drop-shadow">
-            LAP
-          </span>
-          <div className="flex items-baseline leading-none mt-0.5">
-            <span className="font-display font-black text-4xl md:text-5xl italic text-white tracking-tighter drop-shadow-lg">
-              {lap}
+        {isFreeRoam ? (
+          <div className="flex flex-col items-end leading-none">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-[#c8ff2e] uppercase drop-shadow">
+              FREE ROAM
             </span>
-            <span className="font-display font-black text-xl md:text-2xl italic text-white/70 ml-0.5 tracking-tight drop-shadow-md">
-              /{totalLaps}
-            </span>
+            <div className="flex items-baseline leading-none mt-0.5">
+              <span className="font-display font-black text-3xl md:text-4xl italic text-white tracking-tighter drop-shadow-lg">
+                OPEN
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-end leading-none">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-white/75 uppercase drop-shadow">
+              LAP
+            </span>
+            <div className="flex items-baseline leading-none mt-0.5">
+              <span className="font-display font-black text-4xl md:text-5xl italic text-white tracking-tighter drop-shadow-lg">
+                {lap}
+              </span>
+              <span className="font-display font-black text-xl md:text-2xl italic text-white/70 ml-0.5 tracking-tight drop-shadow-md">
+                /{totalLaps}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Minimalist Pause Button */}
         <button
