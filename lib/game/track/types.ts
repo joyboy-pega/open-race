@@ -42,6 +42,7 @@ export interface TrackMeta {
   gridSlotSpacingM: number;
   sunAzimuthDeg?: number;
   scenery: SceneryPlan;
+  isOpenMap?: boolean;
 }
 
 /** DRS zone as spline indices (derived from DrsZoneMeta at build time). */
