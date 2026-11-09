@@ -352,11 +352,12 @@ export function updateCarPhysics(
 } {
   const [ni, d] = findNearestTrackPoint(car.x, car.y, car.idx);
   const T = track.current;
+  const isOpenMap = !!T.meta.isOpenMap || T.meta.id === 'open';
   const signedLat = (car.x - T.px[ni]) * T.nx[ni] + (car.y - T.py[ni]) * T.ny[ni];
-  const inPitLane = !!extra.inPit || inPitBand(ni, signedLat);
+  const inPitLane = !isOpenMap && (!!extra.inPit || inPitBand(ni, signedLat));
   const hw = T.halfWidth[ni];
-  const onTrack = inPitLane || d < hw + 6;
-  const gravel = !inPitLane && d > hw + 40;
+  const onTrack = isOpenMap || inPitLane || d < hw + 6;
+  const gravel = !isOpenMap && !inPitLane && d > hw + 40;
   let drsClosedReason: string | undefined;
 
   const sens = Number.isFinite(steeringSensitivity) && steeringSensitivity > 0 ? steeringSensitivity : 1.0;
@@ -439,7 +440,7 @@ export function updateCarPhysics(
         veh.drsOpen = false;
         drsClosedReason = 'MANUAL';
       } else {
-        const inZone = isInDrsZone(ni);
+        const inZone = isInDrsZone(ni) || isOpenMap;
         const allowed = extra.drsAvailable !== false && !inPitLane;
         const speedUnits = veh.vx * UNITS_PER_M;
         if (allowed && DRS_CONFIG.drsEnabled && (!DRS_CONFIG.requireDrsZones || inZone) && speedUnits >= DRS_CONFIG.minActivationSpeed) {
@@ -455,7 +456,7 @@ export function updateCarPhysics(
       } else if (ctrl.brake > 0.1 || car.brakeInput > 0.1) {
         veh.drsOpen = false;
         drsClosedReason = 'BRAKE';
-      } else if (DRS_CONFIG.requireDrsZones && !isInDrsZone(ni)) {
+      } else if (DRS_CONFIG.requireDrsZones && !isInDrsZone(ni) && !isOpenMap) {
         veh.drsOpen = false;
         drsClosedReason = 'ZONE_EXIT';
       } else if (Math.abs(veh.steer) > 0.4 || veh.isDrifting) {
@@ -615,7 +616,7 @@ export function updateCarPhysics(
         car.drsOpen = false;
         drsClosedReason = 'MANUAL';
       } else {
-        const inZone = isInDrsZone(ni);
+        const inZone = isInDrsZone(ni) || isOpenMap;
         const allowed = extra.drsAvailable !== false && !inPitLane;
         if (allowed && DRS_CONFIG.drsEnabled && (!DRS_CONFIG.requireDrsZones || inZone) && vf >= DRS_CONFIG.minActivationSpeed) {
           car.drsOpen = true;
@@ -630,7 +631,7 @@ export function updateCarPhysics(
       } else if (ctrl.brake > 0.1 || car.brakeInput > 0.1) {
         car.drsOpen = false;
         drsClosedReason = 'BRAKE';
-      } else if (DRS_CONFIG.requireDrsZones && !isInDrsZone(ni)) {
+      } else if (DRS_CONFIG.requireDrsZones && !isInDrsZone(ni) && !isOpenMap) {
         car.drsOpen = false;
         drsClosedReason = 'ZONE_EXIT';
       } else if (absSteer > 0.32 || car.isDrifting) {
@@ -903,7 +904,7 @@ export function updateCarPhysics(
     const driftScrubDrag = car.driftIntensity * 0.16;
     const draftScale = 1 - 0.4 * Math.max(0, Math.min(1, extra.draft ?? 0));
     vf -= vf * (car.currentDrag * draftScale + driftScrubDrag) * dt;
-    if (!onTrack) vf -= vf * (gravel ? 4 : 1.6) * dt;
+    if (!onTrack && !isOpenMap) vf -= vf * (gravel ? 4 : 1.6) * dt;
 
     // Yaw rotation
     let steerCoeff = weather === 'snow' ? 3.2 : 2.6;
@@ -985,28 +986,40 @@ export function updateCarPhysics(
   let pushY = 0;
   let yawTorque = 0;
 
-  for (let k = 0; k < offsets.length; k++) {
-    const off = offsets[k];
-    const cx = car.x + cA * off;
-    const cy = car.y + sA * off;
-    const dx = cx - pt[0];
-    const dy = cy - pt[1];
-    const cDist = Math.hypot(dx, dy) || 1;
-    const cNx = dx / cDist;
-    const cNy = dy / cDist;
-    const cPen = (cDist + radius) - GUARD_RAIL_MAX;
+  if (!isOpenMap) {
+    for (let k = 0; k < offsets.length; k++) {
+      const off = offsets[k];
+      const cx = car.x + cA * off;
+      const cy = car.y + sA * off;
+      const dx = cx - pt[0];
+      const dy = cy - pt[1];
+      const cDist = Math.hypot(dx, dy) || 1;
+      const cNx = dx / cDist;
+      const cNy = dy / cDist;
+      const cPen = (cDist + radius) - GUARD_RAIL_MAX;
 
-    if (cPen > 0) {
-      if (cPen > maxPen) {
-        maxPen = cPen;
-        pushX = -cNx;
-        pushY = -cNy;
+      if (cPen > 0) {
+        if (cPen > maxPen) {
+          maxPen = cPen;
+          pushX = -cNx;
+          pushY = -cNy;
+        }
+        const rx = cA * off;
+        const ry = sA * off;
+        const fx = -cNx * cPen;
+        const fy = -cNy * cPen;
+        yawTorque += (rx * fy - ry * fx);
       }
-      const rx = cA * off;
-      const ry = sA * off;
-      const fx = -cNx * cPen;
-      const fy = -cNy * cPen;
-      yawTorque += (rx * fy - ry * fx);
+    }
+  } else {
+    // Open map: unlimited driving area; gentle soft perimeter bounce at 30,000 units (~3km)
+    const distFromOrigin = Math.hypot(car.x, car.y);
+    const WORLD_LIMIT = 28000;
+    if (distFromOrigin > WORLD_LIMIT) {
+      const pen = distFromOrigin - WORLD_LIMIT;
+      maxPen = pen;
+      pushX = -car.x / distFromOrigin;
+      pushY = -car.y / distFromOrigin;
     }
   }
 
