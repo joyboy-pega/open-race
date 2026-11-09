@@ -433,6 +433,7 @@ export function Track() {
   }, [tex]);
 
   const roadRough = wet > 0.05 ? tex.wetRough : tex.road.rough;
+  const isOpenMap = !!track.current.meta.isOpenMap || track.current.meta.id === 'open';
   const roadTint = snow
     ? new THREE.Color(0.92, 0.95, 1.0)
     : new THREE.Color().setScalar(1 - wet * 0.42);
@@ -484,12 +485,16 @@ export function Track() {
         <meshStandardMaterial map={tex.gravel} roughness={1} side={THREE.DoubleSide} />
       </mesh>
 
-      <mesh geometry={g.wall} receiveShadow castShadow>
-        <meshStandardMaterial vertexColors roughness={0.55} metalness={0.35} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh geometry={g.fence}>
-        <meshStandardMaterial map={tex.fence} color="#9aa6b3" transparent alphaTest={0.35} side={THREE.DoubleSide} roughness={0.7} metalness={0.4} />
-      </mesh>
+      {!isOpenMap && g.wall && (
+        <mesh geometry={g.wall} receiveShadow castShadow>
+          <meshStandardMaterial vertexColors roughness={0.55} metalness={0.35} side={THREE.DoubleSide} />
+        </mesh>
+      )}
+      {!isOpenMap && g.fence && (
+        <mesh geometry={g.fence}>
+          <meshStandardMaterial map={tex.fence} color="#9aa6b3" transparent alphaTest={0.35} side={THREE.DoubleSide} roughness={0.7} metalness={0.4} />
+        </mesh>
+      )}
 
       {/* pit lane */}
       <mesh geometry={g.pitLane} receiveShadow>

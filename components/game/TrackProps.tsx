@@ -349,6 +349,7 @@ export function TrackProps() {
   }, [towers]);
 
   const night = L.nightFactor;
+  const isOpenMap = !!T.meta.isOpenMap || T.meta.id === 'open';
 
   return (
     <group name="track-props">
@@ -407,7 +408,7 @@ export function TrackProps() {
       )}
 
       {/* G3 dressing: tyre wall barriers */}
-      {tyreWalls && (
+      {!isOpenMap && tyreWalls && (
         <mesh geometry={tyreWalls} receiveShadow>
           <meshStandardMaterial map={tyreTex} roughness={0.9} side={THREE.DoubleSide} />
         </mesh>
