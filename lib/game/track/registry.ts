@@ -35,6 +35,14 @@ const CATALOG: TrackCatalogEntry[] = [
     lapRecord: { time: 87.249, driver: 'Sebastian Vettel', year: 2011 },
   },
   {
+    id: 'open',
+    name: 'Open World',
+    country: 'Free Roam',
+    lengthM: 4940,
+    turns: 6,
+    lapRecord: { time: 62.45, driver: 'Free Spirit', year: 2026 },
+  },
+  {
     id: 'monza',
     name: 'Autodromo Nazionale Monza',
     country: 'Italy',
@@ -78,6 +86,7 @@ const CATALOG: TrackCatalogEntry[] = [
 
 /** Lazy loaders for non-bundled tracks (T6 adds entries like `monza: () => import('../tracks/monza')`). */
 const lazyModules: Record<string, () => Promise<TrackModule>> = {
+  open: () => import('../tracks/open').then((m) => m.default),
   monza: () => import('../tracks/monza').then((m) => m.default),
   redbullring: () => import('../tracks/redbullring').then((m) => m.default),
   silverstone: () => import('../tracks/silverstone').then((m) => m.default),
