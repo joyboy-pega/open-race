@@ -7,6 +7,7 @@ import { QUALITY_PRESETS } from '@/lib/game/performance';
 import { useGameStore } from '@/lib/game/store';
 import { Track } from './Track';
 import { TrackProps } from './TrackProps';
+import { TestingGroundProps } from './TestingGroundProps';
 import { Cars } from './Cars';
 import { RacingLine } from './RacingLine';
 import { Camera } from './Camera';
@@ -70,6 +71,7 @@ export function GameCanvas() {
           <Environment />
           <Track />
           <TrackProps />
+          <TestingGroundProps />
           <Cars />
           <RacingLine />
           <Ghost />
